@@ -17,7 +17,7 @@ The main responsibility of the Pipeline class is to pass given subject to all re
 - Initialize the pipeline (`new Pipeline()`).
 - Pass subject to the pipeline using `Pipeline::send()` method.
 - Provide a single handler using `Pipeline::pipe()` method or if multiple pipes (_which obviously should be the case, otherwise what is the intent of using Pipeline anyway_), use `Pipeline::through()` method.
-	> NOTE: `Pipeline::through()` is the main method to provide pipes. If pipes are provided using `Pipeline::pipe()` method and then other pipes are provided using `Pipeline::through()` method, those pipes will be defered. Meaning subject will pass through pipes provided using `Pipeline::through()` and then the transformed subject is pass through other pipes provided using `Pipeline::pipe()`.
+	> NOTE: `Pipeline::through()` is the main method to provide pipes. If pipes are provided using `Pipeline::pipe()` method and then required pipes are provided using `Pipeline::through()` method, pipes provided using `Pipeline::pipe()` will be defered. Meaning subject will pass through pipes provided using `Pipeline::through()` and then the transformed subject is pass through other pipes provided using `Pipeline::pipe()`.
 
 	> In summary, `Pipeline::pipe()` method's intent is to append additional pipes to the pipeline after required pipes are provided using `Pipeline::through()` method.
 
@@ -25,9 +25,9 @@ The main responsibility of the Pipeline class is to pass given subject to all re
 
 - Finally, get the transformed subject back using `Pipeline::thenReturn()` method. If subject needs to be transformed one last time before receiving it, `Pipeline::then()` can be used.
 
-There are two methods that may be required dependinng on how subject is being handled and how pipes behave.
+There are two methods that may be required depending on how subject is being handled and how pipes behave.
 - `Pipeline::use()` method provides additional data to each pipe.
-- `Pipeline::sealWith()` method provides prevention mechanism of script interruption if any pipe throws an exception.
+- `Pipeline::sealWith()` method provides prevention mechanism form script interruption if any pipe throws an exception.
 
 #### Basic Usage
 ```php
@@ -86,11 +86,6 @@ $pipeline->use(is_string(...), strtoupper(...))
 	// Subject never reaches to this pipe.
 	->pipe( static fn(mixed $subject, Closure $next): array
 		=> $next(is_array($subject) ? array(...$subject, 'suffix') : array()));
-
-// Last pipe throws exception, so we'll get exception message instead of transformed subject.
-$transformed = $pipeline->then(
-	static fn(mixed $subject) => array('prefix', ...(is_array($subject) ? $subject : array()))
-);
 
 // Last pipe throws exception, so we'll get exception message instead of transformed subject.
 $transformed = $pipeline->then(
