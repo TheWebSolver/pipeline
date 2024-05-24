@@ -3,8 +3,6 @@
  * Pipeline test.
  *
  * @package TheWebSolver\Codegarage\Test
- *
- * @phpcs:disable Squiz.Commenting.FunctionCommentThrowTag.Missing
  */
 
 declare( strict_types = 1 );
