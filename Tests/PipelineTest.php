@@ -179,4 +179,43 @@ class PipelineTest extends TestCase {
 				->thenReturn()
 		);
 	}
+
+	public function testExampleCodes(): void {
+		$pipeline = new Pipeline();
+
+		$pipeline->use(is_string(...), strtoupper(...))
+			->send(subject: ' convert this to all caps  ')
+			->sealWith(fallback: static fn(\Throwable $e): string => $e->getMessage())
+			->through(pipes: [
+				// $isString is the first value passed to "Pipeline::use()".
+				static function(mixed $subject, Closure $next, Closure $isString): string {
+					return $next(!$isString($subject) ? '' : $subject);
+				},
+
+				// $uppercase is the second value passed to "Pipeline::use()".
+				static function(mixed $subject, Closure $next, Closure $isString, Closure $uppercase): string {
+					return $next($uppercase($subject));
+				},
+
+				// We'll convert our subject into an array.
+				static fn(mixed $subject, Closure $next): array => $next(array($subject)),
+
+				// Final check if our subject remains same type.
+				static function(mixed $subject, Closure $next, Closure $isString): array {
+					return $isString($subject)
+						? $next($subject)
+						: throw new \TypeError('Subject transformed into an array');
+				}
+			])
+			// Subject never reaches to this pipe.
+			->pipe( static fn(mixed $subject, Closure $next): array
+				=> $next(is_array($subject) ? array(...$subject, 'suffix') : array()));
+
+		// Last pipe throws exception, so we'll get exception message instead of transformed subject.
+		$transformed = $pipeline->then(
+			static fn(mixed $subject) => array('prefix', ...(is_array($subject) ? $subject : array()))
+		);
+
+		$this->assertSame(expected: 'Subject transformed into an array', actual: $transformed);
+	}
 }

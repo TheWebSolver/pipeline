@@ -4,5 +4,7 @@
 !composer.json
 !composer.lock
 !phpunit.xml.dist
+!LICENSE
+!/*.md
 !/Src
 !/Tests/
