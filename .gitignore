@@ -1,0 +1,8 @@
+/*
+!/*.php
+!.editorconfig
+!composer.json
+!composer.lock
+!phpunit.xml.dist
+!/Src
+!/Tests/
