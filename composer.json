@@ -4,6 +4,7 @@
     "version": "1.0.0",
     "license": "GPL-3.0-or-later",
     "type": "library",
+    "keywords": ["psr-7", "psr-15", "pipeline", "bridge"],
     "require": {
       "php": ">=8.2.0"
     },
