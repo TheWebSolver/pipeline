@@ -124,7 +124,7 @@ class RequestHandler implements RequestHandlerInterface {
 			return '/app/route/' !== $request->getRequestTarget()
 				? new Response(status: 404)
 				: $previousResponse->withStatus(code: 200);
-		}
+		};
 
 		$middlewares = array(
 			...$this->middlewares,
