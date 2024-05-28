@@ -2,7 +2,7 @@
 /**
  * Pipeline to follow the Chain of Responsibility Design Pattern.
  *
- * @package TheWebSolver\Codegarage\Support
+ * @package TheWebSolver\Codegarage\Library
  */
 
 declare( strict_types = 1 );

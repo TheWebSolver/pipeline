@@ -2,7 +2,7 @@
 /**
  * The pipeline handler to handle given subject/request.
  *
- * @package TheWebSolver\Codegarage\Support
+ * @package TheWebSolver\Codegarage\Library
  */
 
 declare( strict_types = 1 );
