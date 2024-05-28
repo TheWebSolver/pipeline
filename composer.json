@@ -24,5 +24,7 @@
       "psr-4": {
         "TheWebSolver\\Codegarage\\Lib\\": "Tests/"
       }
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
   }
