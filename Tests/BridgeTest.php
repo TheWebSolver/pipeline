@@ -9,6 +9,7 @@ declare( strict_types = 1 );
 
 namespace TheWebSolver\Codegarage\Lib;
 
+use LogicException;
 use MiddlewareAdapter;
 use PHPUnit\Framework\TestCase;
 use TheWebSolver\Codegarage\Lib\PipelineBridge;
@@ -63,5 +64,15 @@ class BridgeTest extends TestCase {
 		};
 
 		$this->assertSame( expected: 350, actual: $handler->handle( $request )->getStatusCode() );
+
+		PipelineBridge::resetMiddlewareAdapter();
+
+		// Must always throw exception if core PSR-15 implementation not used.
+		if ( ! interface_exists( '\\Psr\\Http\\Server\\MiddlewareInterface' ) ) {
+			$this->expectException( LogicException::class );
+			$this->expectExceptionMessage( 'Cannot find implementation of PSR15 HTTP Server Middleware.' );
+
+			PipelineBridge::toMiddleware( middleware: '' );
+		}
 	}
 }
