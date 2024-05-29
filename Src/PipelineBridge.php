@@ -77,9 +77,9 @@ class PipelineBridge {
 			if ( null === $middleware ) {
 				throw new TypeError(
 					sprintf(
-						'Non-existing class "%1$s". Middleware must be a Closure, an instance of %2$s'
-						. ' or classname of a class that implements %2$s.',
-						$provided,
+						'Invalid or Non-existing class "%1$s". Middleware must be a Closure, an'
+						. ' instance of %2$sor classname of a class that implements %2$s.',
+						$isClassName ? $provided : $provided::class,
 						$interface
 					)
 				);
