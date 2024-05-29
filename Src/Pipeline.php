@@ -43,7 +43,7 @@ class Pipeline {
 
 		return match ( true ) {
 			default                  => throw InvalidPipeError::from( $pipe ),
-			$isClassName             => self::make( $pipe )->handle( ... ),
+			$isClassName             => PipelineBridge::make( $pipe )->handle( ... ),
 			$pipe instanceof Pipe    => $pipe->handle( ... ),
 			$pipe instanceof Closure => $pipe,
 		};
@@ -171,11 +171,5 @@ class Pipeline {
 	/** Gets a Closure that wraps current pipe with the next pipe in the pipeline. */
 	protected function chain( Closure $next, string|Closure|Pipe $current ): Closure {
 		return fn ( $subject ) => self::resolve( $current )( $subject, $next, ...( $this->use ?? array() ) );
-	}
-
-	private static function make( string $pipe ): Pipe {
-		return function_exists( '\\TheWebSolver\\Codegarage\\app' )
-			? \TheWebSolver\Codegarage\app()->make( $pipe )
-			: new $pipe();
 	}
 }
