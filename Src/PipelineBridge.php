@@ -51,8 +51,7 @@ class PipelineBridge {
 
 	/**
 	 * @throws LogicException When invoked on projects that doesn't implement PSR7 & PSR15.
-	 * @throws TypeError When middleware creation fails due to invalid classname.
-	 * @throws Throwable When unknown error occurs.
+	 * @throws TypeError      When middleware creation fails due to invalid classname.
 	 */
 	public static function toMiddleware( mixed $middleware ): object {
 		$interface = static::hasMiddlewareInterfaceAdapter()
@@ -60,9 +59,7 @@ class PipelineBridge {
 			: '\\Psr\\Http\\Server\\MiddlewareInterface';
 
 		if ( ! interface_exists( $interface ) ) {
-			throw new LogicException(
-				'Project does not use implementation of PSR15 HTTP Server Middleware.'
-			);
+			throw new LogicException( 'Cannot find implementation of PSR15 HTTP Server Middleware.' );
 		}
 
 		$provided    = $middleware;
@@ -83,14 +80,14 @@ class PipelineBridge {
 						'Non-existing class "%1$s". Middleware must be a Closure, an instance of %2$s'
 						. ' or classname of a class that implements %2$s.',
 						$provided,
-						static::$middlewareInterface
+						$interface
 					)
 				);
 			}
 
 			return static::getMiddlewareAdapter( $middleware );
 		} catch ( Throwable $e ) {
-			if ( ! is_string( $middleware ) ) {
+			if ( $e instanceof TypeError || ! is_string( $middleware ) ) {
 				throw $e;
 			}
 
@@ -98,20 +95,19 @@ class PipelineBridge {
 				sprintf(
 					'The given middleware classname: "%1$s" must be an instance of "%2$s".',
 					$middleware,
-					static::$middlewareInterface
+					$interface
 				)
 			);
 		}//end try
 	}
 
-	/** @param string|Closure|Middleware $middleware */
-	public static function middlewareToPipe( $middleware ): Pipe {
+	public static function middlewareToPipe( mixed $middleware ): Pipe {
 		// Because Pipe::handle() wraps this function with the next pipe, we do not need to...
 		// ...manually wrap middleware with $next & let createPipe take care of it.
 		// If we do so, same middleware will recreate response multiple times
 		// making our app less performant which we don't want at all cost.
-		return self::toPipe(
-			static fn ( $r, $next, $request, $handler ) => self::toMiddleware( $middleware )
+		return static::toPipe(
+			static fn ( $r, $next, $request, $handler ) => static::toMiddleware( $middleware )
 				->process( $request->withAttribute( static::MIDDLEWARE_RESPONSE, $r ), $handler )
 		);
 	}
