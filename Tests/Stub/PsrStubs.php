@@ -12,7 +12,7 @@
 
 declare( strict_types = 1 );
 
-namespace TheWebSolver\Codegarage\Lib\Psr7Adapter {
+namespace Psr7Adapter {
 	interface ServerRequestInterface {
 		public function withAttribute( string $name, mixed $value ): static;
 		public function getAttribute( string $name, mixed $default = null ): mixed;
@@ -55,9 +55,9 @@ namespace TheWebSolver\Codegarage\Lib\Psr7Adapter {
 	}
 }
 
-namespace TheWebSolver\Codegarage\Lib\Psr15Adapter {
+namespace Psr15Adapter {
 	use TheWebSolver\Codegarage\Lib\PipelineBridge;
-	use TheWebSolver\Codegarage\Lib\Psr7Adapter\{ ServerRequestInterface, ResponseInterface };
+	use Psr7Adapter\{ ServerRequestInterface, ResponseInterface };
 
 	interface RequestHandlerInterface {
 		public function handle( ServerRequestInterface $request ): ResponseInterface;
@@ -85,8 +85,8 @@ namespace TheWebSolver\Codegarage\Lib\Psr15Adapter {
 }
 
 namespace {
-	use TheWebSolver\Codegarage\Lib\Psr7Adapter\{ ServerRequestInterface, ResponseInterface };
-	use TheWebSolver\Codegarage\Lib\Psr15Adapter\{ MiddlewareInterface, RequestHandlerInterface };
+	use Psr7Adapter\{ ServerRequestInterface, ResponseInterface };
+	use Psr15Adapter\{ MiddlewareInterface, RequestHandlerInterface };
 
 	class MiddlewareAdapter implements MiddlewareInterface {
 		public function __construct( private readonly \Closure $middleware ) {}

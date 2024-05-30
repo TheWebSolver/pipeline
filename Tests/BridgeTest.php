@@ -11,19 +11,23 @@ namespace TheWebSolver\Codegarage\Lib;
 
 use LogicException;
 use MiddlewareAdapter;
+use Psr7Adapter\Request;
+use Psr7Adapter\Response;
+use Psr15Adapter\Middleware;
 use PHPUnit\Framework\TestCase;
+use Psr7Adapter\ResponseInterface;
+use Psr15Adapter\MiddlewareInterface;
+use Psr7Adapter\ServerRequestInterface;
+use Psr15Adapter\RequestHandlerInterface;
 use TheWebSolver\Codegarage\Lib\PipelineBridge;
-use TheWebSolver\Codegarage\Lib\Psr7Adapter\Request;
-use TheWebSolver\Codegarage\Lib\Psr7Adapter\Response;
-use TheWebSolver\Codegarage\Lib\Psr15Adapter\Middleware;
-use TheWebSolver\Codegarage\Lib\Psr7Adapter\ResponseInterface;
-use TheWebSolver\Codegarage\Lib\Psr15Adapter\MiddlewareInterface;
-use TheWebSolver\Codegarage\Lib\Psr7Adapter\ServerRequestInterface;
-use TheWebSolver\Codegarage\Lib\Psr15Adapter\RequestHandlerInterface;
 
 class BridgeTest extends TestCase {
+	private bool $PSRPackageInstalled;
 	protected function setUp(): void {
+		$this->PSRPackageInstalled = interface_exists( '\\Psr\\Http\\Server\\MiddlewareInterface' );
+
 		require_once __DIR__ . '/Stub/PsrStubs.php';
+
 	}
 
 	public function testPSRBridge() {
@@ -68,7 +72,7 @@ class BridgeTest extends TestCase {
 		PipelineBridge::resetMiddlewareAdapter();
 
 		// Must always throw exception if core PSR-15 implementation not used.
-		if ( ! interface_exists( '\\Psr\\Http\\Server\\MiddlewareInterface' ) ) {
+		if ( ! $this->PSRPackageInstalled ) {
 			$this->expectException( LogicException::class );
 			$this->expectExceptionMessage( 'Cannot find implementation of PSR15 HTTP Server Middleware.' );
 
