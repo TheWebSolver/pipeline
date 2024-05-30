@@ -7,7 +7,7 @@
 
 declare( strict_types = 1 );
 
-namespace TheWebSolver\Codegarage\Lib;
+namespace TheWebSolver\Codegarage;
 
 use MiddlewareAdapter;
 use Psr7Adapter\Request;
@@ -18,7 +18,9 @@ use Psr7Adapter\ResponseInterface;
 use Psr15Adapter\MiddlewareInterface;
 use Psr7Adapter\ServerRequestInterface;
 use Psr15Adapter\RequestHandlerInterface;
+use TheWebSolver\Codegarage\Lib\Pipeline;
 use TheWebSolver\Codegarage\Lib\PipelineBridge;
+use TheWebSolver\Codegarage\Lib\MiddlewarePsrNotFoundException;
 
 class BridgeTest extends TestCase {
 	private bool $PSRPackageInstalled;

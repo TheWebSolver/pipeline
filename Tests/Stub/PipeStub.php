@@ -7,7 +7,9 @@
 
 declare( strict_types = 1 );
 
-namespace TheWebSolver\Codegarage\Lib;
+namespace TheWebSolver\Codegarage\Stub;
+
+use TheWebSolver\Codegarage\Lib\PipeInterface;
 
 class PipeStub implements PipeInterface {
 	public function handle( mixed $subject, \Closure $next, mixed ...$use ): mixed {

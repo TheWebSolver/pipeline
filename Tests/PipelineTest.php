@@ -7,12 +7,17 @@
 
 declare( strict_types = 1 );
 
-namespace TheWebSolver\Codegarage\Lib;
+namespace TheWebSolver\Codegarage;
 
 use Closure;
 use Exception;
 use RuntimeException;
 use PHPUnit\Framework\TestCase;
+use TheWebSolver\Codegarage\Lib\Pipeline;
+use TheWebSolver\Codegarage\Stub\PipeStub;
+use TheWebSolver\Codegarage\Lib\PipeInterface;
+use TheWebSolver\Codegarage\Lib\InvalidPipeError;
+use TheWebSolver\Codegarage\Lib\UnexpectedPipelineException;
 
 class PipelineTest extends TestCase {
 	/** @dataProvider provideVariousPipeTypes */
