@@ -29,11 +29,11 @@ class PipelineBridge {
 
 	/**
 	 * @param string|Pipe|Closure(mixed $subject, Closure $next, mixed ...$use): mixed $from
-	 * @throws InvalidPipeError When invalid pipe given.
+	 * @throws InvalidPipeError            When invalid pipe given.
+	 * @throws UnexpectedPipelineException When could not determine thrown exception.
 	 */
 	public static function toPipe( string|Closure|Pipe $from ): Pipe {
 		$pipe = Pipeline::resolve( pipe: $from );
-
 		return new class( $pipe ) implements Pipe {
 			public function __construct( private readonly Closure $pipe ) {}
 
@@ -61,7 +61,6 @@ class PipelineBridge {
 					: $default
 			);
 
-		$provided    = $middleware;
 		$isClassName = is_string( $middleware ) && class_exists( $middleware );
 
 		try {
@@ -76,9 +75,8 @@ class PipelineBridge {
 			if ( null === $middleware ) {
 				throw new InvalidMiddlewareForPipeError(
 					sprintf(
-						'Invalid or Non-existing class "%1$s". Middleware must be a Closure, an'
-						. ' instance of %2$s or a concrete\'s classname that implements %2$s.',
-						$isClassName ? $provided : $provided::class,
+						'Invalid middleware type. Middleware must be a Closure, an'
+						. ' instance of "%1$s" or a concrete\'s classname that implements "%1$s".',
 						$interface
 					)
 				);

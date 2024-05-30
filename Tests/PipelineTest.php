@@ -21,9 +21,9 @@ use TheWebSolver\Codegarage\Lib\UnexpectedPipelineException;
 
 class PipelineTest extends TestCase {
 	/** @dataProvider provideVariousPipeTypes */
-	public function testPipeResolver( mixed $pipe, bool $throws ): void {
-		if ( $throws ) {
-			$this->expectException( InvalidPipeError::class );
+	public function testPipeResolver( mixed $pipe, ?string $thrown ): void {
+		if ( $thrown ) {
+			$this->expectException( $thrown );
 		}
 
 		$this->assertSame(
@@ -38,16 +38,17 @@ class PipelineTest extends TestCase {
 	/** @return mixed[] */
 	public static function provideVariousPipeTypes(): array {
 		return array(
-			array( PipeStub::class, false ),
-			array( static fn ( string $subject, Closure $next ): string => $next( $subject ), false ),
-			array( '\\Undefined\\ClassName', true ),
+			array( PipeStub::class, null ),
+			array( static fn ( string $subject, Closure $next ): string => $next( $subject ), null ),
+			array( '\\Undefined\\ClassName', InvalidPipeError::class ),
+			array( static::class, UnexpectedPipelineException::class ),
 			array(
 				new class() implements PipeInterface {
 					public function handle( mixed $subject, Closure $next, mixed ...$use ): mixed {
 						return $subject;
 					}
 				},
-				false,
+				null,
 			),
 		);
 	}
