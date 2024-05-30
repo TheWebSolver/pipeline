@@ -35,18 +35,27 @@ class Pipeline {
 	protected Closure $catcher;
 
 	/**
-	 * @throws InvalidPipeError When invalid pipe given.
+	 * @throws InvalidPipeError            When invalid pipe given.
+	 * @throws UnexpectedPipelineException When could not determine thrown exception.
 	 * @phpstan-param class-string<Pipe>|Pipe|Closure(mixed $subject, Closure $next, mixed ...$use): mixed $pipe
 	 */
 	final public static function resolve( string|Closure|Pipe $pipe ): Closure {
 		$isClassName = is_string( $pipe ) && class_exists( $pipe );
 
-		return match ( true ) {
-			default                  => throw InvalidPipeError::from( $pipe ),
-			$isClassName             => PipelineBridge::make( $pipe )->handle( ... ),
-			$pipe instanceof Pipe    => $pipe->handle( ... ),
-			$pipe instanceof Closure => $pipe,
-		};
+		try {
+			return match ( true ) {
+				default                  => throw InvalidPipeError::from( $pipe ),
+				$isClassName             => PipelineBridge::make( $pipe )->handle( ... ),
+				$pipe instanceof Pipe    => $pipe->handle( ... ),
+				$pipe instanceof Closure => $pipe,
+			};
+		} catch ( Throwable $e ) {
+			if ( $e instanceof InvalidPipeError ) {
+				throw $e;
+			}
+
+			throw new UnexpectedPipelineException( $e->getMessage(), $e->getCode(), $e );
+		}
 	}
 
 	/**
