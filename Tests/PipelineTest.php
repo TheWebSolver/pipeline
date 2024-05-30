@@ -162,7 +162,7 @@ class PipelineTest extends TestCase {
 		);
 
 		// When "Pipeline::sealWith()" is not used, exception is thrown.
-		$this->expectException( RuntimeException::class );
+		$this->expectException( UnexpectedPipelineException::class );
 
 		( new Pipeline() )
 			->send( subject: 'test' )

@@ -11,8 +11,6 @@ namespace TheWebSolver\Codegarage\Lib;
 
 use Closure;
 use Throwable;
-use TypeError;
-use LogicException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use TheWebSolver\Codegarage\Lib\PipeInterface as Pipe;
@@ -50,35 +48,36 @@ class PipelineBridge {
 	}
 
 	/**
-	 * @throws LogicException When invoked on projects that doesn't implement PSR7 & PSR15.
-	 * @throws TypeError      When middleware creation fails due to invalid classname.
+	 * @throws MiddlewarePsrNotFoundException When invoked on projects that doesn't implement PSR7 & PSR15.
+	 * @throws InvalidMiddlewareForPipeError  When middleware creation fails due to invalid classname.
+	 * @throws UnexpectedPipelineException    When could not determine thrown exception.
 	 */
 	public static function toMiddleware( mixed $middleware ): object {
 		$interface = static::hasMiddlewareInterfaceAdapter()
 			? static::$middlewareInterface
-			: '\\Psr\\Http\\Server\\MiddlewareInterface';
-
-		if ( ! interface_exists( $interface ) ) {
-			throw new LogicException( 'Cannot find implementation of PSR15 HTTP Server Middleware.' );
-		}
+			: (
+				! interface_exists( $default = '\\Psr\\Http\\Server\\MiddlewareInterface' )
+					? throw new MiddlewarePsrNotFoundException( 'Cannot find PSR15 HTTP Server Middleware.' )
+					: $default
+			);
 
 		$provided    = $middleware;
 		$isClassName = is_string( $middleware ) && class_exists( $middleware );
 
 		try {
-			$middleware = ( match ( true ) {
+			$middleware = match ( true ) {
 				// Middleware classname is a non-existing classname, then default to null.
 				default                         => null,
 				$middleware instanceof Closure  => $middleware,
 				$isClassName                    => static::make( $middleware )->process( ... ),
 				is_a( $middleware, $interface ) => $middleware->process( ... ),
-			} );
+			};
 
 			if ( null === $middleware ) {
-				throw new TypeError(
+				throw new InvalidMiddlewareForPipeError(
 					sprintf(
 						'Invalid or Non-existing class "%1$s". Middleware must be a Closure, an'
-						. ' instance of %2$sor classname of a class that implements %2$s.',
+						. ' instance of %2$s or a concrete\'s classname that implements %2$s.',
 						$isClassName ? $provided : $provided::class,
 						$interface
 					)
@@ -87,11 +86,15 @@ class PipelineBridge {
 
 			return static::getMiddlewareAdapter( $middleware );
 		} catch ( Throwable $e ) {
-			if ( $e instanceof TypeError || ! is_string( $middleware ) ) {
+			if ( $e instanceof InvalidMiddlewareForPipeError ) {
 				throw $e;
 			}
 
-			throw new TypeError(
+			if ( ! is_string( $middleware ) ) {
+				throw new UnexpectedPipelineException( $e->getMessage(), $e->getCode(), $e );
+			}
+
+			throw new InvalidMiddlewareForPipeError(
 				sprintf(
 					'The given middleware classname: "%1$s" must be an instance of "%2$s".',
 					$middleware,

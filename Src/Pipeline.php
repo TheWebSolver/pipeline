@@ -134,7 +134,7 @@ class Pipeline {
 	}
 
 	/**
-	 * Appends additional pipes onto the pipeline.
+	 * Appends additional pipes to the pipeline stack.
 	 *
 	 * @param string|Pipe|Closure(mixed $subject, Closure $next, mixed ...$use): mixed
 	 * @phpstan-param class-string<Pipe>|Pipe|Closure(mixed $subject, Closure $next, mixed ...$use): mixed $pipe
@@ -146,10 +146,11 @@ class Pipeline {
 	}
 
 	/**
-	 * Runs the provided return pipe after passing through all pipes.
+	 * Gets the transformed subject after passing through one last pipe.
 	 *
 	 * @param Closure(mixed $subject, mixed ...$use): mixed $return
-	 * @throws Throwable When a pipe abrupt the pipeline by throwing an exception & sealWith not used.
+	 * @throws InvalidPipeError            When pipe type could not be resolved.
+	 * @throws UnexpectedPipelineException When a pipe abrupt the pipeline by throwing an exception & sealWith not used.
 	 */
 	public function then( Closure $return ): mixed {
 		$use     = $this->use ?? array();
@@ -159,11 +160,22 @@ class Pipeline {
 		try {
 			return array_reduce( $pipes, $this->chain( ... ), $return )( $subject, ...$use );
 		} catch ( Throwable $e ) {
-			return ( $catcher = $this->catcher ?? null ) ? $catcher( $e, ...$use ) : throw $e;
+			if ( $catcher = $this->catcher ?? null ) {
+				return $catcher( $e, ...$use );
+			}
+
+			return $e instanceof InvalidPipeError
+				? throw $e
+				: throw new UnexpectedPipelineException( $e->getMessage(), $e->getCode(), $e );
 		}
 	}
 
-	/** Passes through pipes in the pipeline and returns the transformed result. */
+	/**
+	 * Passes through pipes in the pipeline and returns the transformed result.
+	 *
+	 * @throws InvalidPipeError            When pipe type could not be resolved.
+	 * @throws UnexpectedPipelineException When a pipe abrupt the pipeline by throwing an exception & sealWith not used.
+	 */
 	public function thenReturn() {
 		return $this->then( return: static fn( $transformed ) => $transformed );
 	}
