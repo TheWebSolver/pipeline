@@ -141,7 +141,7 @@ class BridgeTest extends TestCase {
 		$this->removePsrPackageFixtures();
 
 		// Must always throw exception if core PSR-15 implementation not used.
-		if ( ! CODEGARAGE_PSR_PACKAGE_INSTALLED ) {
+		if ( ! TWS_CODEGARAGE_PSR_PACKAGE_INSTALLED ) {
 			$this->expectException( MiddlewarePsrNotFoundException::class );
 			$this->expectExceptionMessage( 'Cannot find PSR15 HTTP Server Middleware.' );
 
