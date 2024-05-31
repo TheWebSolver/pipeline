@@ -3,6 +3,8 @@
  * Pipeline to follow the Chain of Responsibility Design Pattern.
  *
  * @package TheWebSolver\Codegarage\Library
+ *
+ * @phpcs:disable Squiz.Commenting.FunctionComment.ParamNameNoMatch, Squiz.Commenting.FunctionComment.IncorrectTypeHint -- Closure type-hint OK.
  */
 
 declare( strict_types = 1 );
@@ -39,6 +41,7 @@ class Pipeline {
 	 * @throws UnexpectedPipelineException When could not determine thrown exception.
 	 * @phpstan-param class-string<Pipe>|Pipe|Closure(mixed $subject, Closure $next, mixed ...$use): mixed $pipe
 	 */
+	// phpcs:ignore Squiz.Commenting.FunctionCommentThrowTag.WrongNumber -- Exactly 2 exception thrown.
 	final public static function resolve( string|Closure|Pipe $pipe ): Closure {
 		$isClassName = is_string( $pipe ) && class_exists( $pipe );
 
@@ -161,6 +164,7 @@ class Pipeline {
 	 * @throws InvalidPipeError            When pipe type could not be resolved.
 	 * @throws UnexpectedPipelineException When a pipe abrupt the pipeline by throwing an exception & sealWith not used.
 	 */
+	// phpcs:ignore Squiz.Commenting.FunctionCommentThrowTag.Missing -- Doesn't throw throwable.
 	public function then( Closure $return ): mixed {
 		$use     = $this->use ?? array();
 		$pipes   = array_reverse( $this->pipes );
