@@ -10,7 +10,8 @@ declare( strict_types = 1 );
 namespace TheWebSolver\Codegarage;
 
 use Closure;
-use MiddlewareAdapter;
+use MockHandler;
+use MockMiddleware;
 use Psr7Adapter\Request;
 use Psr7Adapter\Response;
 use Psr15Adapter\Middleware;
@@ -30,7 +31,7 @@ class BridgeTest extends TestCase {
 	private function addPsrPackageFixtures(): void {
 		PipelineBridge::setMiddlewareAdapter(
 			interface: MiddlewareInterface::class,
-			className: MiddlewareAdapter::class
+			className: MockMiddleware::class
 		);
 	}
 
@@ -109,26 +110,25 @@ class BridgeTest extends TestCase {
 		$handler = new class() implements RequestHandlerInterface {
 			public function handle( ServerRequestInterface $request ): ResponseInterface {
 				$middlewares[] = Middleware::class;
-				$middlewares[] = static fn ( ServerRequestInterface $request, RequestHandlerInterface $h )
-					=> $request
-						->getAttribute( PipelineBridge::MIDDLEWARE_RESPONSE )
-						->withStatus( code: 300 );
+				$middlewares[] = static function ( ServerRequestInterface $request, RequestHandlerInterface $h ) {
+					$response = $h->handle( $request );
+
+					return $response->withStatus( code: $response->getStatusCode() + 50 );
+				};
 
 				$middlewares[] = new class() implements MiddlewareInterface {
 					public function process(
 						ServerRequestInterface $request,
 						RequestHandlerInterface $handler
 					): ResponseInterface {
-						$response = $request
-						->getAttribute( PipelineBridge::MIDDLEWARE_RESPONSE )
-						->withStatus( code: 350 );
+						$response = $handler->handle( $request );
 
-						return $response;
+						return $response->withStatus( code: $response->getStatusCode() + 250 );
 					}
 				};
 
 				return ( new Pipeline() )
-					->use( $request, $this )
+					->use( $request, MockHandler::class )
 					->send( subject: ( new Response() )->withStatus( code: 100 ) )
 					->through(
 						pipes: array_map( fn( $m ) => PipelineBridge::middlewareToPipe( $m ), $middlewares )
@@ -136,7 +136,7 @@ class BridgeTest extends TestCase {
 			}
 		};
 
-		$this->assertSame( expected: 350, actual: $handler->handle( $request )->getStatusCode() );
+		$this->assertSame( expected: 500, actual: $handler->handle( $request )->getStatusCode() );
 
 		$this->removePsrPackageFixtures();
 

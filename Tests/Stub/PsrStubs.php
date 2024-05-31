@@ -75,11 +75,9 @@ namespace Psr15Adapter {
 			ServerRequestInterface $request,
 			RequestHandlerInterface $handler
 		): ResponseInterface {
-			$response = $request
-				->getAttribute( name: PipelineBridge::MIDDLEWARE_RESPONSE )
-				->withStatus( code: 200 );
+			$response = $handler->handle( $request );
 
-			return $response;
+			return $response->withStatus( code: $response->getStatusCode() + 100 );
 		}
 	}
 }
@@ -88,7 +86,7 @@ namespace {
 	use Psr7Adapter\{ ServerRequestInterface, ResponseInterface };
 	use Psr15Adapter\{ MiddlewareInterface, RequestHandlerInterface };
 
-	class MiddlewareAdapter implements MiddlewareInterface {
+	class MockMiddleware implements MiddlewareInterface {
 		public function __construct( private readonly \Closure $middleware ) {}
 
 		public function process(
@@ -96,6 +94,14 @@ namespace {
 			RequestHandlerInterface $handler
 		): ResponseInterface {
 			return ( $this->middleware )( $request, $handler );
+		}
+	}
+
+	class MockHandler implements RequestHandlerInterface {
+		public function __construct( private ResponseInterface $response ) {}
+
+		public function handle(ServerRequestInterface $request): ResponseInterface {
+			return $this->response;
 		}
 	}
 }
