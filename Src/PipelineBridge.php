@@ -33,6 +33,7 @@ class PipelineBridge {
 	 */
 	public static function toPipe( string|Closure|Pipe $from ): Pipe {
 		$pipe = Pipeline::resolve( pipe: $from );
+
 		return new class( $pipe ) implements Pipe {
 			public function __construct( private readonly Closure $pipe ) {}
 
@@ -62,7 +63,6 @@ class PipelineBridge {
 
 		try {
 			$middleware = match ( true ) {
-				// Middleware classname is a non-existing classname, then default to null.
 				default                         => null,
 				$middleware instanceof Closure  => $middleware,
 				$isClassName                    => static::make( $middleware )->process( ... ),
@@ -81,47 +81,37 @@ class PipelineBridge {
 				)
 			);
 		} catch ( Throwable $e ) {
-			if ( $e instanceof InvalidMiddlewareForPipeError ) {
-				throw $e;
-			}
-
-			if ( ! is_string( $middleware ) ) {
-				throw new UnexpectedPipelineException( $e->getMessage(), $e->getCode(), $e );
-			}
-
-			throw new InvalidMiddlewareForPipeError(
-				sprintf(
-					'The given middleware classname: "%1$s" must be an instance of "%2$s".',
-					$middleware,
-					$interface
-				)
-			);
+			throw $e instanceof InvalidMiddlewareForPipeError
+				? $e
+				: ( ! is_string( $middleware )
+					? new UnexpectedPipelineException( $e->getMessage(), $e->getCode(), $e )
+					: new InvalidMiddlewareForPipeError(
+						sprintf(
+							'The given middleware classname: "%1$s" must be an instance of "%2$s".',
+							$middleware,
+							$interface
+						)
+					) );
 		}//end try
 	}
 
 	public static function middlewareToPipe( mixed $middleware ): Pipe {
 		return static::toPipe(
 			from: static fn ( $response, $next, $request, ...$use ) => static::toMiddleware( $middleware )
-				->process( $request, handler: static::getHandlerAdapter( with: $response, args: $use ) )
+				->process( $request, handler: static::getPipeHandler( with: $response, args: $use ) )
 		);
 	}
 
 	/**
-	 * @param \Psr\Http\Message\ResponseInterface $with
-	 * @param array<mixed>                        $args Should only be a handler class for mocking.
-	 * @return \Psr\Http\Server\RequestHandlerInterface
+	 * @param Response     $with Pipe response.
+	 * @param array<mixed> $args Can contain external Pipe Handler.
+	 * @return Handler
 	 */
 	// phpcs:ignore Squiz.Commenting.FunctionComment.IncorrectTypeHint -- Contravariance.
-	protected static function getHandlerAdapter( object $with, array $args ) {
-		$handler = $args[0] ?? false;
-
-		return $handler ? new $handler( $with ) : new class( $with ) implements Handler {
-			public function __construct( private readonly Response $response ) {}
-
-			public function handle( Request $request ): Response {
-				return $this->response;
-			}
-		};
+	protected static function getPipeHandler( object $with, array $args ) {
+		return ( $handler = reset( $args ) ) && is_string( $handler ) && class_exists( $handler )
+			? new $handler( $with )
+			: new PipeResponseHandler( $with );
 	}
 
 	public static function make( string $className ): object {
