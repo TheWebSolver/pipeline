@@ -9,4 +9,4 @@ namespace TheWebSolver\Codegarage\Lib;
 
 use Exception;
 
-class UnexpectedPipelineException extends Exception {}
+class InvalidPipeline extends Exception {}

@@ -11,4 +11,4 @@ namespace TheWebSolver\Codegarage\Lib;
 
 use TypeError;
 
-class InvalidMiddlewareForPipeError extends TypeError {}
+class InvalidMiddlewareForPipe extends TypeError {}

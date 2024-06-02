@@ -15,9 +15,9 @@ use RuntimeException;
 use PHPUnit\Framework\TestCase;
 use TheWebSolver\Codegarage\Lib\Pipeline;
 use TheWebSolver\Codegarage\Stub\PipeStub;
+use TheWebSolver\Codegarage\Lib\InvalidPipe;
 use TheWebSolver\Codegarage\Lib\PipeInterface;
-use TheWebSolver\Codegarage\Lib\InvalidPipeError;
-use TheWebSolver\Codegarage\Lib\UnexpectedPipelineException;
+use TheWebSolver\Codegarage\Lib\InvalidPipeline;
 
 class PipelineTest extends TestCase {
 	/** @dataProvider provideVariousPipeTypes */
@@ -40,8 +40,8 @@ class PipelineTest extends TestCase {
 		return array(
 			array( PipeStub::class, null ),
 			array( static fn ( string $subject, Closure $next ): string => $next( $subject ), null ),
-			array( '\\Undefined\\ClassName', InvalidPipeError::class ),
-			array( static::class, UnexpectedPipelineException::class ),
+			array( '\\Undefined\\ClassName', InvalidPipe::class ),
+			array( static::class, InvalidPipeline::class ),
 			array(
 				new class() implements PipeInterface {
 					public function handle( mixed $subject, Closure $next, mixed ...$use ): mixed {
@@ -168,7 +168,7 @@ class PipelineTest extends TestCase {
 		);
 
 		// When "Pipeline::sealWith()" is not used, exception is thrown.
-		$this->expectException( UnexpectedPipelineException::class );
+		$this->expectException( InvalidPipeline::class );
 
 		( new Pipeline() )
 			->send( subject: 'test' )

@@ -24,8 +24,8 @@ use TheWebSolver\Codegarage\Lib\Pipeline;
 use TheWebSolver\Codegarage\Stub\PipeStub;
 use TheWebSolver\Codegarage\Lib\PipeInterface;
 use TheWebSolver\Codegarage\Lib\PipelineBridge;
-use TheWebSolver\Codegarage\Lib\InvalidMiddlewareForPipeError;
-use TheWebSolver\Codegarage\Lib\MiddlewarePsrNotFoundException;
+use TheWebSolver\Codegarage\Lib\PsrMiddlewareNotFound;
+use TheWebSolver\Codegarage\Lib\InvalidMiddlewareForPipe;
 
 class BridgeTest extends TestCase {
 	private function addPsrPackageFixtures(): void {
@@ -82,9 +82,9 @@ class BridgeTest extends TestCase {
 		return array(
 			array( Middleware::class, null ),
 			array( $this->createMock( MiddlewareInterface::class ), null ),
-			array( '\\Invalid\\Middleware', InvalidMiddlewareForPipeError::class ),
-			array( true, InvalidMiddlewareForPipeError::class ),
-			array( static::class, InvalidMiddlewareForPipeError::class ),
+			array( '\\Invalid\\Middleware', InvalidMiddlewareForPipe::class ),
+			array( true, InvalidMiddlewareForPipe::class ),
+			array( static::class, InvalidMiddlewareForPipe::class ),
 			array(
 				static fn( ServerRequestInterface $r, RequestHandlerInterface $h ) => new Response(),
 				null,
@@ -142,7 +142,7 @@ class BridgeTest extends TestCase {
 
 		// Must always throw exception if core PSR-15 implementation not used.
 		if ( ! TWS_CODEGARAGE_PSR_PACKAGE_INSTALLED ) {
-			$this->expectException( MiddlewarePsrNotFoundException::class );
+			$this->expectException( PsrMiddlewareNotFound::class );
 			$this->expectExceptionMessage( 'Cannot find PSR15 HTTP Server Middleware.' );
 
 			PipelineBridge::toMiddleware( middleware: '' );

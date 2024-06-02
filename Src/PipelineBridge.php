@@ -29,7 +29,7 @@ class PipelineBridge {
 	/**
 	 * @param string|Pipe|Closure(mixed $subject, Closure $next, mixed ...$use): mixed $from
 	 * @throws InvalidPipeError            When invalid pipe given.
-	 * @throws UnexpectedPipelineException When could not determine thrown exception.
+	 * @throws InvalidPipeline When could not determine thrown exception.
 	 */
 	public static function toPipe( string|Closure|Pipe $from ): Pipe {
 		$pipe = Pipeline::resolve( pipe: $from );
@@ -45,9 +45,9 @@ class PipelineBridge {
 	// phpcs:enable
 
 	/**
-	 * @throws MiddlewarePsrNotFoundException When invoked on projects that doesn't implement PSR7 & PSR15.
-	 * @throws InvalidMiddlewareForPipeError  When middleware creation fails due to invalid classname.
-	 * @throws UnexpectedPipelineException    When could not determine thrown exception.
+	 * @throws PsrMiddlewareNotFound    When invoked on projects that doesn't implement PSR7 & PSR15.
+	 * @throws InvalidMiddlewareForPipe When middleware creation fails due to invalid classname.
+	 * @throws InvalidPipeline          When could not determine thrown exception.
 	 */
 	// phpcs:ignore Squiz.Commenting.FunctionCommentThrowTag.WrongNumber -- Exactly 3 exceptions thrown.
 	public static function toMiddleware( mixed $middleware ): object {
@@ -55,7 +55,7 @@ class PipelineBridge {
 			? static::$middlewareInterface
 			: (
 				! interface_exists( $default = '\\Psr\\Http\\Server\\MiddlewareInterface' )
-					? throw new MiddlewarePsrNotFoundException( 'Cannot find PSR15 HTTP Server Middleware.' )
+					? throw new PsrMiddlewareNotFound( 'Cannot find PSR15 HTTP Server Middleware.' )
 					: $default
 			);
 
@@ -73,7 +73,7 @@ class PipelineBridge {
 				return static::getMiddlewareAdapter( $middleware );
 			}
 
-			throw new InvalidMiddlewareForPipeError(
+			throw new InvalidMiddlewareForPipe(
 				sprintf(
 					'Invalid middleware type. Middleware must be a Closure, an instance of'
 					. ' "%1$s" or a concrete\'s classname that implements "%1$s".',
@@ -81,11 +81,11 @@ class PipelineBridge {
 				)
 			);
 		} catch ( Throwable $e ) {
-			throw $e instanceof InvalidMiddlewareForPipeError
+			throw $e instanceof InvalidMiddlewareForPipe
 				? $e
 				: ( ! is_string( $middleware )
-					? new UnexpectedPipelineException( $e->getMessage(), $e->getCode(), $e )
-					: new InvalidMiddlewareForPipeError(
+					? new InvalidPipeline( $e->getMessage(), $e->getCode(), $e )
+					: new InvalidMiddlewareForPipe(
 						sprintf(
 							'The given middleware classname: "%1$s" must be an instance of "%2$s".',
 							$middleware,

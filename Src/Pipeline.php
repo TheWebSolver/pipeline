@@ -37,8 +37,8 @@ class Pipeline {
 	protected Closure $catcher;
 
 	/**
-	 * @throws InvalidPipeError            When invalid pipe given.
-	 * @throws UnexpectedPipelineException When could not determine thrown exception.
+	 * @throws InvalidPipe     When invalid pipe given.
+	 * @throws InvalidPipeline When could not determine thrown exception.
 	 * @phpstan-param class-string<Pipe>|Pipe|Closure(mixed $subject, Closure $next, mixed ...$use): mixed $pipe
 	 */
 	// phpcs:ignore Squiz.Commenting.FunctionCommentThrowTag.WrongNumber -- Exactly 2 exception thrown.
@@ -47,17 +47,17 @@ class Pipeline {
 
 		try {
 			return match ( true ) {
-				default                  => throw InvalidPipeError::from( $pipe ),
+				default                  => throw InvalidPipe::from( $pipe ),
 				$isClassName             => PipelineBridge::make( $pipe )->handle( ... ),
 				$pipe instanceof Pipe    => $pipe->handle( ... ),
 				$pipe instanceof Closure => $pipe,
 			};
 		} catch ( Throwable $e ) {
-			if ( $e instanceof InvalidPipeError ) {
+			if ( $e instanceof InvalidPipe ) {
 				throw $e;
 			}
 
-			throw new UnexpectedPipelineException( $e->getMessage(), $e->getCode(), $e );
+			throw new InvalidPipeline( $e->getMessage(), $e->getCode(), $e );
 		}
 	}
 
@@ -161,8 +161,8 @@ class Pipeline {
 	 * Gets the transformed subject after passing through one last pipe.
 	 *
 	 * @param Closure(mixed $subject, mixed ...$use): mixed $return
-	 * @throws InvalidPipeError            When pipe type could not be resolved.
-	 * @throws UnexpectedPipelineException When a pipe abrupt the pipeline by throwing an exception & sealWith not used.
+	 * @throws InvalidPipe            When pipe type could not be resolved.
+	 * @throws InvalidPipeline When a pipe abrupt the pipeline by throwing an exception & sealWith not used.
 	 */
 	// phpcs:ignore Squiz.Commenting.FunctionCommentThrowTag.Missing -- Doesn't throw throwable.
 	public function then( Closure $return ): mixed {
@@ -177,17 +177,17 @@ class Pipeline {
 				return $catcher( $e, ...$use );
 			}
 
-			return $e instanceof InvalidPipeError
+			return $e instanceof InvalidPipe
 				? throw $e
-				: throw new UnexpectedPipelineException( $e->getMessage(), $e->getCode(), $e );
+				: throw new InvalidPipeline( $e->getMessage(), $e->getCode(), $e );
 		}
 	}
 
 	/**
 	 * Passes through pipes in the pipeline and returns the transformed result.
 	 *
-	 * @throws InvalidPipeError            When pipe type could not be resolved.
-	 * @throws UnexpectedPipelineException When a pipe abrupt the pipeline by throwing an exception & sealWith not used.
+	 * @throws InvalidPipe            When pipe type could not be resolved.
+	 * @throws InvalidPipeline When a pipe abrupt the pipeline by throwing an exception & sealWith not used.
 	 */
 	public function thenReturn() {
 		return $this->then( return: static fn( $transformed ) => $transformed );

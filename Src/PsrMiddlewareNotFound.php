@@ -11,4 +11,4 @@ namespace TheWebSolver\Codegarage\Lib;
 
 use RuntimeException;
 
-class MiddlewarePsrNotFoundException extends RuntimeException {}
+class PsrMiddlewareNotFound extends RuntimeException {}
