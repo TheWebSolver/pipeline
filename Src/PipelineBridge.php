@@ -28,8 +28,8 @@ class PipelineBridge {
 	// phpcs:disable Squiz.Commenting.FunctionComment.ParamNameNoMatch -- Closure param OK.
 	/**
 	 * @param string|Pipe|Closure(mixed $subject, Closure $next, mixed ...$use): mixed $from
-	 * @throws InvalidPipeError            When invalid pipe given.
-	 * @throws InvalidPipeline When could not determine thrown exception.
+	 * @throws InvalidPipeError When invalid pipe given.
+	 * @throws InvalidPipeline  When could not determine thrown exception.
 	 */
 	public static function toPipe( string|Closure|Pipe $from ): Pipe {
 		$pipe = Pipeline::resolve( pipe: $from );

@@ -15,28 +15,19 @@ use Closure;
 use Throwable;
 use TheWebSolver\Codegarage\Lib\PipeInterface as Pipe;
 
-/** Pipeline to follow the Chain of Responsibility Design Pattern. */
 class Pipeline {
-	/** The subject that gets transformed when passed through various pipes. */
 	protected mixed $subject;
 
-	/**
-	 * Pipes being used.
-	 *
-	 * @var array<string|Closure|Pipe>
-	 */
+	/** @var array<string|Closure|Pipe> */
 	protected array $pipes = array();
 
-	/**
-	 * Global arguments accepted by pipe's func/method parameter.
-	 *
-	 * @var mixed[]
-	 */
+	/** @var mixed[] */
 	protected array $use;
 
 	protected Closure $catcher;
 
 	/**
+	 * @param string|Pipe|Closure(mixed $subject, Closure $next, mixed ...$use): mixed $pipe
 	 * @throws InvalidPipe     When invalid pipe given.
 	 * @throws InvalidPipeline When could not determine thrown exception.
 	 * @phpstan-param class-string<Pipe>|Pipe|Closure(mixed $subject, Closure $next, mixed ...$use): mixed $pipe
@@ -53,35 +44,11 @@ class Pipeline {
 				$pipe instanceof Closure => $pipe,
 			};
 		} catch ( Throwable $e ) {
-			if ( $e instanceof InvalidPipe ) {
-				throw $e;
-			}
-
-			throw new InvalidPipeline( $e->getMessage(), $e->getCode(), $e );
+			self::throw( $e );
 		}
 	}
 
-	/**
-	 * Sets the global arguments accepted by pipe's func/method parameter.
-	 *
-	 * @example usage
-	 * ```
-	 * $param1  = is_string(...);
-	 * $param2  = strtoupper(...);
-	 * $subject = ' convert this to all caps  ';
-	 * $result = (new Pipeline())
-	 *  ->use($param1, $param2)
-	 *  ->send($subject)
-	 *  ->through(pipes: [
-	 *   // Each pipe func/method accepts [#1] $subject and [#2] $next arguments by default.
-	 *   // Then, $param1 = [#3] $isString; $param2 = [#4] $capitalize as global args.
-	 *   // Not the best example but serves the purpose of passing additional args.
-	 *   static function(string $subject, Closure $next, Closure $isString, Closure $capitalize) {
-	 *    return $next(!$isString($subject) ? '' : $capitalize($subject));
-	 *   }
-	 *  ])->thenReturn();
-	 * ```
-	 */
+	/** Sets the global arguments accepted by the pipe handler. */
 	public function use( mixed ...$args ): static {
 		$this->use = $args;
 
@@ -116,29 +83,7 @@ class Pipeline {
 		return $this;
 	}
 
-	/**
-	 * Captures the pipe's exception that will blatantly abrupt the whole pipeline flow.
-	 *
-	 * When short-circuited pipeline will prevent remaining pipes operation, it fixes.
-	 * Any exception thrown by the failing pipe can then be handled by the user.
-	 * Its captured value will be returned instead of the `Pipeline::then()`.
-	 *
-	 * @param Closure(Throwable $e, mixed ...$use): mixed $fallback
-	 * @example usage
-	 * ```
-	 * $result = (new Pipeline())
-	 *  ->send(subject: [])
-	 *  // Pipeline abrupt and empty string returned because first pipe throws an exception.
-	 *  ->sealWith(fallback: fn(\TypeError $e) => '')
-	 *  ->through(pipes: [
-	 *   fn(mixed $subject, Closure $next) => is_string($subject)
-	 *    ? $next(trim($subject))
-	 *    : throw new \TypeError('Subject must be a string.'),
-	 *   // Pipeline never passes subject to this pipe.
-	 *   fn(mixed $subject, Closure $next) => $next(strtolower($subject))
-	 *   ])->thenReturn();
-	 * ```
-	 */
+	/** Captures the pipe's exception that will blatantly abrupt the whole pipeline flow. */
 	public function sealWith( Closure $fallback ): static {
 		$this->catcher = $fallback;
 
@@ -148,7 +93,7 @@ class Pipeline {
 	/**
 	 * Appends additional pipes to the pipeline stack.
 	 *
-	 * @param string|Pipe|Closure(mixed $subject, Closure $next, mixed ...$use): mixed
+	 * @param string|Pipe|Closure(mixed $subject, Closure $next, mixed ...$use): mixed $pipe
 	 * @phpstan-param class-string<Pipe>|Pipe|Closure(mixed $subject, Closure $next, mixed ...$use): mixed $pipe
 	 */
 	public function pipe( string|Closure|Pipe $pipe ): static {
@@ -173,20 +118,14 @@ class Pipeline {
 		try {
 			return array_reduce( $pipes, $this->chain( ... ), $return )( $subject, ...$use );
 		} catch ( Throwable $e ) {
-			if ( $catcher = $this->catcher ?? null ) {
-				return $catcher( $e, ...$use );
-			}
-
-			return $e instanceof InvalidPipe
-				? throw $e
-				: throw new InvalidPipeline( $e->getMessage(), $e->getCode(), $e );
+			return ( $seal = $this->catcher ?? null ) ? $seal( $e, ...$use ) : self::throw( $e );
 		}
 	}
 
 	/**
 	 * Passes through pipes in the pipeline and returns the transformed result.
 	 *
-	 * @throws InvalidPipe            When pipe type could not be resolved.
+	 * @throws InvalidPipe     When pipe type could not be resolved.
 	 * @throws InvalidPipeline When a pipe abrupt the pipeline by throwing an exception & sealWith not used.
 	 */
 	public function thenReturn() {
@@ -196,5 +135,11 @@ class Pipeline {
 	/** Gets a Closure that wraps current pipe with the next pipe in the pipeline. */
 	protected function chain( Closure $next, string|Closure|Pipe $current ): Closure {
 		return fn ( $subject ) => self::resolve( $current )( $subject, $next, ...( $this->use ?? array() ) );
+	}
+
+	private static function throw( Throwable $e ): never {
+		throw $e instanceof InvalidPipe
+			? $e
+			: new InvalidPipeline( $e->getMessage(), $e->getCode(), $e );
 	}
 }

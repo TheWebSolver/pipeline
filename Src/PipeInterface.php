@@ -11,7 +11,6 @@ namespace TheWebSolver\Codegarage\Lib;
 
 use Closure;
 
-/** The pipeline handler to handle given subject/request. */
 interface PipeInterface {
 	/**
 	 * Handles the given subject and returns the transformed data.
