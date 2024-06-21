@@ -5,6 +5,7 @@
  * @package TheWebSolver\Codegarage\Library
  *
  * @phpcs:disable Squiz.Commenting.FunctionComment.ParamNameNoMatch, Squiz.Commenting.FunctionComment.IncorrectTypeHint -- Closure type-hint OK.
+ * @phpcs:disable Squiz.Commenting.FunctionCommentThrowTag.WrongNumber -- Accuracy is deceiving!!!
  */
 
 declare( strict_types = 1 );
@@ -32,7 +33,6 @@ class Pipeline {
 	 * @throws InvalidPipeline When could not determine thrown exception.
 	 * @phpstan-param class-string<Pipe>|Pipe|Closure(mixed $subject, Closure $next, mixed ...$use): mixed $pipe
 	 */
-	// phpcs:ignore Squiz.Commenting.FunctionCommentThrowTag.WrongNumber -- Exactly 2 exception thrown.
 	final public static function resolve( string|Closure|Pipe $pipe ): Closure {
 		$isClassName = is_string( $pipe ) && class_exists( $pipe );
 
@@ -44,7 +44,7 @@ class Pipeline {
 				$pipe instanceof Closure => $pipe,
 			};
 		} catch ( Throwable $e ) {
-			self::throw( $e );
+			throw self::getException( $e );
 		}
 	}
 
@@ -109,7 +109,6 @@ class Pipeline {
 	 * @throws InvalidPipe            When pipe type could not be resolved.
 	 * @throws InvalidPipeline When a pipe abrupt the pipeline by throwing an exception & sealWith not used.
 	 */
-	// phpcs:ignore Squiz.Commenting.FunctionCommentThrowTag.Missing -- Doesn't throw throwable.
 	public function then( Closure $return ): mixed {
 		$use     = $this->use ?? array();
 		$pipes   = array_reverse( $this->pipes );
@@ -117,8 +116,13 @@ class Pipeline {
 
 		try {
 			return array_reduce( $pipes, $this->chain( ... ), $return )( $subject, ...$use );
-		} catch ( Throwable $e ) {
-			return ( $seal = $this->catcher ?? null ) ? $seal( $e, ...$use ) : self::throw( $e );
+		} catch ( InvalidPipe|InvalidPipeline $e ) {
+			if ( ! $sealer = ( $this->catcher ?? null ) ) {
+				throw $e;
+			}
+
+			// "InvalidPipe" is an internal error. Must be fixed and should never be sealed.
+			return $e instanceof InvalidPipe ? throw $e : $sealer( $e, ...$use );
 		}
 	}
 
@@ -134,12 +138,22 @@ class Pipeline {
 
 	/** Gets a Closure that wraps current pipe with the next pipe in the pipeline. */
 	protected function chain( Closure $next, string|Closure|Pipe $current ): Closure {
-		return fn ( $subject ) => self::resolve( $current )( $subject, $next, ...( $this->use ?? array() ) );
+		return function ( $subject ) use ( $current, $next ) {
+			try {
+				return self::resolve( $current )( $subject, $next, ...( $this->use ?? array() ) );
+			} catch ( Throwable $e ) {
+				// Here, exception can be anything besides Pipe & Pipeline exception. This exception may be
+				// thrown when pipe is handling the subject. We'll need to convert whatever thrown back to
+				// the InvalidPipeline exception and silently pass the previous subject through this new
+				// InvalidPipeline exception so that it can be consumed and/or handled by the client.
+				throw self::getException( $e, $subject );
+			}
+		};
 	}
 
-	private static function throw( Throwable $e ): never {
-		throw $e instanceof InvalidPipe
-			? $e
-			: new InvalidPipeline( $e->getMessage(), $e->getCode(), $e );
+	private static function getException( Throwable $previous ): InvalidPipe|InvalidPipeline {
+		return ! $previous instanceof InvalidPipe
+			? new InvalidPipeline( $previous, subject: func_num_args() === 2 ? func_get_arg( 1 ) : null )
+			: $previous;
 	}
 }

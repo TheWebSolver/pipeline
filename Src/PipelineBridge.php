@@ -84,14 +84,9 @@ class PipelineBridge {
 			throw $e instanceof InvalidMiddlewareForPipe
 				? $e
 				: ( ! is_string( $middleware )
-					? new InvalidPipeline( $e->getMessage(), $e->getCode(), $e )
-					: new InvalidMiddlewareForPipe(
-						sprintf(
-							'The given middleware classname: "%1$s" must be an instance of "%2$s".',
-							$middleware,
-							$interface
-						)
-					) );
+					? new InvalidPipeline( $e )
+					: new InvalidMiddlewareForPipe( $e->getMessage(), $e->getCode(), $e )
+				);
 		}//end try
 	}
 
@@ -115,7 +110,7 @@ class PipelineBridge {
 	}
 
 	public static function make( string $className ): object {
-		return isset( static::$container ) && static::$container->has( id: $className )
+		return isset( static::$container )
 			? static::$container->get( id: $className )
 			: new $className();
 	}
