@@ -6,6 +6,8 @@ namespace TheWebSolver\Codegarage\Lib;
 use Closure;
 use Throwable;
 use Psr\Container\ContainerInterface;
+use TheWebSolver\Codegarage\Lib\Error\InvalidPipe;
+use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
 
 class Pipe implements PipeInterface {
 	/** @param Closure(mixed $subject, Closure $next, mixed ...$args): mixed $handler */

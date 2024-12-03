@@ -8,9 +8,9 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use TheWebSolver\Codegarage\Lib\Pipe;
 use PHPUnit\Framework\MockObject\MockObject;
-use TheWebSolver\Codegarage\Lib\InvalidPipe;
-use TheWebSolver\Codegarage\Lib\PipeInterface;
 use TheWebSolver\Codegarage\Test\Stub\PipeStub;
+use TheWebSolver\Codegarage\Lib\Error\InvalidPipe;
+use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
 
 class PipeTest extends TestCase {
 	/** @dataProvider provideContainerEntryAndReturnValueForPipe */

@@ -9,11 +9,11 @@ use Psr\Http\Server\MiddlewareInterface;
 use TheWebSolver\Codegarage\Lib\Pipeline;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TheWebSolver\Codegarage\Lib\PipeInterface;
 use TheWebSolver\Codegarage\Lib\PipelineBridge;
 use TheWebSolver\Codegarage\Test\Stub\ResponseStub;
 use TheWebSolver\Codegarage\Test\Stub\MiddlewareStub;
-use TheWebSolver\Codegarage\Lib\InvalidMiddlewareForPipe;
+use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
+use TheWebSolver\Codegarage\Lib\Error\InvalidMiddlewareForPipe;
 
 class BridgeTest extends TestCase {
 	/** @dataProvider provideMiddlewares */

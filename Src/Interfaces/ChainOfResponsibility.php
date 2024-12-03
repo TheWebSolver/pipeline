@@ -5,9 +5,9 @@ namespace TheWebSolver\Codegarage\Lib\Interfaces;
 
 use Closure;
 use Throwable;
-use TheWebSolver\Codegarage\Lib\InvalidPipe;
-use TheWebSolver\Codegarage\Lib\InvalidPipeline;
-use TheWebSolver\Codegarage\Lib\PipeInterface as Handler;
+use TheWebSolver\Codegarage\Lib\Error\InvalidPipe;
+use TheWebSolver\Codegarage\Lib\Error\InvalidPipeline;
+use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface as Handler;
 
 interface ChainOfResponsibility {
 	/**

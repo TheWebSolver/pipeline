@@ -6,8 +6,10 @@ namespace TheWebSolver\Codegarage\Lib;
 use Closure;
 use Throwable;
 use Psr\Container\ContainerInterface;
-use TheWebSolver\Codegarage\Lib\PipeInterface as Handler;
+use TheWebSolver\Codegarage\Lib\Error\InvalidPipe;
+use TheWebSolver\Codegarage\Lib\Error\InvalidPipeline;
 use TheWebSolver\Codegarage\Lib\Interfaces\ChainOfResponsibility;
+use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface as Handler;
 
 class Pipeline implements ChainOfResponsibility {
 	private mixed $subject;

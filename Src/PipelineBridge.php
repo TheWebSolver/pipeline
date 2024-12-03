@@ -12,8 +12,10 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TheWebSolver\Codegarage\Lib\PipeInterface;
 use TheWebSolver\Codegarage\Lib\Psr\Middleware;
+use TheWebSolver\Codegarage\Lib\Psr\RequestHandler;
+use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
+use TheWebSolver\Codegarage\Lib\Error\InvalidMiddlewareForPipe;
 
 class PipelineBridge {
 	public function __construct( private readonly ?ContainerInterface $container = null ) {}
@@ -46,7 +48,7 @@ class PipelineBridge {
 
 	private function withHandler( ResponseInterface $response, mixed $arg ): RequestHandlerInterface {
 		if ( ! is_string( $arg ) ) {
-			return new PipeResponseHandler( $response );
+			return new RequestHandler( $response );
 		}
 
 		return is_a( $arg, RequestHandlerInterface::class, allow_string: true )
