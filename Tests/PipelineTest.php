@@ -8,10 +8,10 @@ use Exception;
 use RuntimeException;
 use PHPUnit\Framework\TestCase;
 use TheWebSolver\Codegarage\Lib\Pipeline;
-use TheWebSolver\Codegarage\Lib\InvalidPipe;
-use TheWebSolver\Codegarage\Lib\PipeInterface;
 use TheWebSolver\Codegarage\Test\Stub\PipeStub;
-use TheWebSolver\Codegarage\Lib\InvalidPipeline;
+use TheWebSolver\Codegarage\Lib\Error\InvalidPipe;
+use TheWebSolver\Codegarage\Lib\Error\InvalidPipeline;
+use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
 
 class PipelineTest extends TestCase {
 	/** @return mixed[] */
