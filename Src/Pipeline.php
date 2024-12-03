@@ -11,7 +11,7 @@ use TheWebSolver\Codegarage\Lib\Error\InvalidPipeline;
 use TheWebSolver\Codegarage\Lib\Interfaces\ChainOfResponsibility;
 use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface as Handler;
 
-class Pipeline implements ChainOfResponsibility {
+final class Pipeline implements ChainOfResponsibility {
 	private mixed $subject;
 	private Closure $catcher;
 	/** @var mixed[] */
@@ -25,19 +25,19 @@ class Pipeline implements ChainOfResponsibility {
 		return $thrown instanceof InvalidPipe ? $thrown : new InvalidPipeline( $thrown, $subject );
 	}
 
-	public function use( mixed ...$globalArgsForEachPipe ): static {
+	public function use( mixed ...$globalArgsForEachPipe ): self {
 		$this->args = $globalArgsForEachPipe;
 
 		return $this;
 	}
 
-	public function send( mixed $subject ): static {
+	public function send( mixed $subject ): self {
 		$this->subject = $subject;
 
 		return $this;
 	}
 
-	public function through( array $pipes ): static {
+	public function through( array $pipes ): self {
 		$deferredPipes = $this->pipes ?? array();
 		$this->pipes   = $pipes;
 
@@ -46,13 +46,13 @@ class Pipeline implements ChainOfResponsibility {
 		return $this;
 	}
 
-	public function sealWith( Closure $fallback ): static {
+	public function sealWith( Closure $fallback ): self {
 		$this->catcher = $fallback;
 
 		return $this;
 	}
 
-	public function pipe( string|Closure|Handler $handler ): static {
+	public function pipe( string|Closure|Handler $handler ): self {
 		$this->pipes[] = $handler;
 
 		return $this;

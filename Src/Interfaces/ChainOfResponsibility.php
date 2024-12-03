@@ -13,12 +13,12 @@ interface ChainOfResponsibility {
 	/**
 	 * Provides additional arguments that can be used by all registered pipes.
 	 */
-	public function use( mixed ...$globalArgsForEachPipe ): static;
+	public function use( mixed ...$globalArgsForEachPipe ): self;
 
 	/**
 	 * Provides subject to be transformed by all registered pipes.
 	 */
-	public function send( mixed $subject ): static;
+	public function send( mixed $subject ): self;
 
 	/**
 	 * Registers a single pipe to transform the subject.
@@ -29,7 +29,7 @@ interface ChainOfResponsibility {
 	 *
 	 * @param class-string<Handler>|Handler|Closure(mixed $subject, Closure $next, mixed ...$args): mixed $handler
 	 */
-	public function pipe( string|Closure|Handler $handler ): static;
+	public function pipe( string|Closure|Handler $handler ): self;
 
 	/**
 	 * Registers pipes to transform the subject.
@@ -38,14 +38,14 @@ interface ChainOfResponsibility {
 	 *
 	 * @param array<class-string<Handler>|Handler|Closure(mixed $subject, Closure $next, mixed ...$args): mixed> $pipes
 	 */
-	public function through( array $pipes ): static;
+	public function through( array $pipes ): self;
 
 	/**
 	 * Catches any exception thrown during transformation of subject and returns the fallback value.
 	 *
 	 * @param Closure(Throwable $exception, mixed ...$args): mixed $fallback
 	 */
-	public function sealWith( Closure $fallback ): static;
+	public function sealWith( Closure $fallback ): self;
 
 	/**
 	 * Returns the transformed subject after passing through all registered pipes and current pipe handle.
