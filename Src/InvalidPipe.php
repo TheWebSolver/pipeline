@@ -1,10 +1,4 @@
 <?php
-/**
- * Exception when invalid pipe given.
- *
- * @package TheWebSolver\Codegarage\Library
- */
-
 declare( strict_types = 1 );
 
 namespace TheWebSolver\Codegarage\Lib;
@@ -18,8 +12,10 @@ class InvalidPipe extends TypeError {
 
 	private function __construct( mixed $pipe ) {
 		parent::__construct(
-			message: ! is_string( $pipe ) ? '' : "Invalid pipe classname given: {$pipe}.",
-			code: 400
+			code: 400,
+			message: ! is_string( $pipe )
+				? 'Invalid pipe given: ' . get_debug_type( $pipe )
+				: "Invalid pipe classname given: {$pipe}.",
 		);
 	}
 }

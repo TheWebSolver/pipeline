@@ -6,5 +6,7 @@
 !phpunit.xml.dist
 !LICENSE
 !/*.md
+!phpcs.xml.dist
+!phpstan.dist.neon
 !/Src
 !/Tests/
