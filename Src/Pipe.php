@@ -26,8 +26,7 @@ class Pipe implements PipeInterface {
 			$pipe = ! is_string( $handler ) ? $handler : ( $container?->get( $handler ) ?? new $handler() );
 
 			return match ( true ) {
-				$pipe instanceof self          => $pipe,
-				$pipe instanceof PipeInterface => new self( $pipe->handle( ... ) ),
+				$pipe instanceof PipeInterface => $pipe,
 				$pipe instanceof Closure       => new self( $pipe ),
 				default                        => throw InvalidPipe::from( $handler ),
 			};
