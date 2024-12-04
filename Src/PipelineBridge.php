@@ -21,12 +21,14 @@ class PipelineBridge {
 	public function __construct( private readonly ?ContainerInterface $container = null ) {}
 
 	/** @throws InvalidMiddlewareForPipe When middleware creation fails due to invalid classname. */
-	public function toMiddleware( string|Closure|MiddlewareInterface $middleware ): MiddlewareInterface {
+	public function toMiddleware( string|Closure|MiddlewareInterface $handler ): MiddlewareInterface {
 		try {
+			$middleware = ! is_string( $handler ) ? $handler : ( $this->container?->get( $handler ) ?? new $handler() );
+
 			return match ( true ) {
 				$middleware instanceof MiddlewareInterface => $middleware,
 				$middleware instanceof Closure             => new Middleware( $middleware ),
-				default                                    => $this->container?->get( $middleware ) ?? new $middleware()
+				default                                    => throw InvalidMiddlewareForPipe::from( $middleware )
 			};
 		} catch ( Throwable $e ) {
 			throw new InvalidMiddlewareForPipe( $e->getMessage(), $e->getCode(), $e );
@@ -47,12 +49,10 @@ class PipelineBridge {
 	}
 
 	private function withHandler( ResponseInterface $response, mixed $arg ): RequestHandlerInterface {
-		if ( ! is_string( $arg ) ) {
-			return new RequestHandler( $response );
-		}
+		$handler = is_string( $arg ) ? new $arg( $response ) : new RequestHandler( $response );
 
-		return is_a( $arg, RequestHandlerInterface::class, allow_string: true )
-			? new $arg( $response )
-			: throw new LogicException( 'Invalid Request Handler provided for pipeline usage.' );
+		return $handler instanceof RequestHandlerInterface
+			? $handler
+			: throw new LogicException( 'Invalid Request Handler provided for pipeline usage: ' . $arg );
 	}
 }

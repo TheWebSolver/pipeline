@@ -3,21 +3,88 @@ declare( strict_types = 1 );
 
 namespace TheWebSolver\Codegarage\Test;
 
+use Closure;
+use Exception;
+use LogicException;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use TheWebSolver\Codegarage\Lib\Pipeline;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Container\ContainerExceptionInterface;
 use TheWebSolver\Codegarage\Lib\PipelineBridge;
+use TheWebSolver\Codegarage\Lib\Psr\Middleware;
 use TheWebSolver\Codegarage\Test\Stub\ResponseStub;
 use TheWebSolver\Codegarage\Test\Stub\MiddlewareStub;
 use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
 use TheWebSolver\Codegarage\Lib\Error\InvalidMiddlewareForPipe;
 
 class BridgeTest extends TestCase {
+	private mixed $expectedContainerInterfaceGetMethodReturnValue;
+
+	protected function tearDown(): void {
+		unset( $this->expectedContainerInterfaceGetMethodReturnValue );
+	}
+
+	private function mockFromContainerInterfaceGetMethod( string $id ): mixed {
+		return self::class === $id
+			? throw new class() extends Exception implements ContainerExceptionInterface {}
+			: $this->expectedContainerInterfaceGetMethodReturnValue;
+	}
+
+	/** @dataProvider provideContainerEntryAndReturnValueForMiddleware */
+	public function testMiddlewareConversionWithContainer(
+		string|Closure|MiddlewareInterface $handler,
+		mixed $returnedByContainer,
+		int $noOfTimesInvoked,
+		string $expectedMiddlewareClassName,
+		bool $throws = false
+	): void {
+		if ( $throws ) {
+			$this->expectException( InvalidMiddlewareForPipe::class );
+		}
+
+		$this->expectedContainerInterfaceGetMethodReturnValue = $returnedByContainer;
+
+		/** @var ContainerInterface&MockObject */
+		( $container = $this->createMock( ContainerInterface::class ) )
+			->expects( $this->exactly( $noOfTimesInvoked ) )
+			->method( 'get' )
+			->with( $handler )
+			->willReturnCallback( $this->mockFromContainerInterfaceGetMethod( ... ) );
+
+		$this->assertInstanceOf(
+			$expectedMiddlewareClassName,
+			( new PipelineBridge( $container ) )->toMiddleware( $handler )
+		);
+	}
+
+	public function provideContainerEntryAndReturnValueForMiddleware(): array {
+		return array(
+			array( MiddlewareStub::class, new MiddlewareStub(), 1, MiddlewareStub::class ),
+			array( 'middlewareAsClosure', static function () {}, 1, Middleware::class ),
+			array(
+				static function () {},
+				'"ContainerInterface::get()" is never invoked if handler is not a string value',
+				0,
+				Middleware::class,
+			),
+			array( new MiddlewareStub(), null, 0, MiddlewareStub::class ),
+			array(
+				self::class,
+				$this,
+				1,
+				'All exceptions are converted to "InvalidMiddlewareForPipe"',
+				true,
+			),
+
+		);
+	}
+
 	/** @dataProvider provideMiddlewares */
-	public function testMiddlewareConversion( mixed $middleware, ?string $thrown ): void {
+	public function testMiddlewareConversionWithoutContainer( mixed $middleware, ?string $thrown ): void {
 		if ( $thrown ) {
 			$this->expectException( $thrown );
 		}
@@ -81,5 +148,18 @@ class BridgeTest extends TestCase {
 		};
 
 		$this->assertSame( expected: 500, actual: $handler->handle( $request )->getStatusCode() );
+	}
+
+	public function testExceptionThrownWithInvalidHandler(): void {
+		$response = $this->createStub( ResponseInterface::class );
+		$handler  = new class( $response ) /* does not implement RequestHandlerInterface */ {
+			public function __construct( private ResponseInterface $response ) {}
+		};
+
+		$this->expectException( LogicException::class );
+
+		( new PipelineBridge() )
+			->middlewareToPipe( new MiddlewareStub() )
+			->handle( $response, $this->fail( ... ), $this->createStub( ServerRequestInterface::class ), $handler::class );
 	}
 }

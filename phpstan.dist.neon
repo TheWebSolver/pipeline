@@ -2,8 +2,3 @@ parameters:
 	level: max
 	paths:
 		- Src
-	ignoreErrors:
-		-
-			path: Src/PipelineBridge.php
-			messages:
-				- '#^Method TheWebSolver\\Codegarage\\Lib\\PipelineBridge\:\:toMiddleware\(\) should return Psr\\Http\\Server\\MiddlewareInterface but returns mixed.$#'
