@@ -16,23 +16,81 @@ use Psr\Http\Server\RequestHandlerInterface as Handler;
 use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
 
 class PipelineBridge {
-	public function __construct( private readonly ?ContainerInterface $container = null ) {}
+	private Request $request;
+	private Response $response;
+	/** @var array<PipeInterface> */
+	private array $pipes;
+
+	public function __construct( private ?ContainerInterface $container = null ) {}
+
+	public function withRequest( Request $request ): self {
+		$this->request = $request;
+
+		return $this;
+	}
+
+	public function using( ContainerInterface $container ): self {
+		$this->container = $container;
+
+		return $this;
+	}
+
+	public function process( Response $response ): self {
+		$this->response = $response;
+
+		return $this;
+	}
+
+	/** @param array<string|Closure|PipeInterface> $pipes */
+	public function through( array $pipes ): self {
+		foreach ( $pipes as $pipe ) {
+			$this->pipes[] = Pipe::create( $pipe, $this->container );
+		}
+
+		return $this;
+	}
+
+	/** @param array<string|Closure|MiddlewareInterface> $middlewares */
+	public function throughMiddlewares( array $middlewares ): self {
+		$this->pipes = array_map( $this->middlewareToPipe( ... ), $middlewares );
+
+		return $this;
+	}
+
+	public function getResponse(): Response {
+		$transformed = ( new Pipeline( $this->container ) )
+			->use( $this->request )
+			->send( $this->response )
+			->through( $this->pipes )
+			->thenReturn();
+
+		// Transformed value is always a Response. Making static analysis happy
+		// and enforcing maximum security of the application along the way.
+		return $transformed instanceof Response
+			? $transformed
+			: throw new LogicException(
+				'Response instance must be returned. Instead returns: ' . get_debug_type( $transformed )
+			);
+	}
 
 	/**
 	 * Converts to pipe irrespective of middleware being invalid.
 	 *
 	 * Exception is only thrown when pipeline has started transforming the subject (Response).
 	 */
-	public function middlewareToPipe( string|Closure|MiddlewareInterface $handler ): PipeInterface {
+	public static function middlewareToPipe(
+		string|Closure|MiddlewareInterface $handler,
+		?ContainerInterface $container = null
+	): PipeInterface {
 		return Pipe::create(
-			fn ( Response $subject, Closure $next, Request $request, mixed ...$args ) => $next(
-				Middleware::create( $handler, $this->container )
-					->process( $request, $this->withHandler( $subject, reset( $args ) ) )
+			static fn ( Response $subject, Closure $next, Request $request, mixed ...$args ) => $next(
+				Middleware::create( $handler, $container )
+					->process( $request, self::withHandler( $subject, reset( $args ) ) )
 			)
 		);
 	}
 
-	private function withHandler( Response $response, mixed $arg ): Handler {
+	private static function withHandler( Response $response, mixed $arg ): Handler {
 		$handler = is_string( $arg ) ? new $arg( $response ) : new RequestHandler( $response );
 
 		return $handler instanceof Handler

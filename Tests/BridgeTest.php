@@ -19,6 +19,7 @@ use TheWebSolver\Codegarage\Lib\Psr\Middleware;
 use TheWebSolver\Codegarage\Test\Stub\ResponseStub;
 use TheWebSolver\Codegarage\Test\Stub\MiddlewareStub;
 use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
+use TheWebSolver\Codegarage\Test\Stub\RequestHandlerStub;
 use TheWebSolver\Codegarage\Lib\Error\InvalidMiddlewareForPipe;
 
 class BridgeTest extends TestCase {
@@ -81,7 +82,7 @@ class BridgeTest extends TestCase {
 	}
 
 	/** @dataProvider provideMiddlewares */
-	public function testMiddlewareConversionWithoutContainer( mixed $middleware, ?string $thrown ): void {
+	public function testMiddlewareConversionWithoutContainer( mixed $middleware, ?string $thrown = null ): void {
 		if ( $thrown ) {
 			$this->expectException( $thrown );
 		}
@@ -90,8 +91,8 @@ class BridgeTest extends TestCase {
 	}
 
 	/** @dataProvider provideMiddlewares */
-	public function testMiddlewareToPipeConversion( mixed $middleware, ?string $thrown ): void {
-		$this->assertInstanceOf( PipeInterface::class, ( new PipelineBridge() )->middlewareToPipe( $middleware ) );
+	public function testMiddlewareToPipeConversion( mixed $middleware, ?string $thrown = null ): void {
+		$this->assertInstanceOf( PipeInterface::class, PipelineBridge::middlewareToPipe( $middleware ) );
 	}
 
 	/** @return array<mixed[]>*/
@@ -99,11 +100,11 @@ class BridgeTest extends TestCase {
 		$responseStub = $this->createStub( ResponseInterface::class );
 
 		return array(
-			array( MiddlewareStub::class, null ),
-			array( $this->createMock( MiddlewareInterface::class ), null ),
+			array( MiddlewareStub::class ),
+			array( $this->createMock( MiddlewareInterface::class ) ),
 			array( '\\Invalid\\Middleware', InvalidMiddlewareForPipe::class ),
 			array( static::class, InvalidMiddlewareForPipe::class ),
-			array( fn( ServerRequestInterface $r, RequestHandlerInterface $h ) => $responseStub, null ),
+			array( fn( ServerRequestInterface $r, RequestHandlerInterface $h ) => $responseStub ),
 			array(
 				new class( $responseStub ) implements MiddlewareInterface {
 					public function __construct( private readonly ResponseInterface $response ) {}
@@ -112,35 +113,35 @@ class BridgeTest extends TestCase {
 						return $this->response;
 					}
 				},
-				null,
 			),
 		);
 	}
 
-	public function testPipelineBridgeWithPsr() {
-		/** @var ServerRequestInterface */
-		$request = $this->createStub( ServerRequestInterface::class );
+	private function getRequestHandlerMiddlewares(): array {
+		$middlewares   = array( MiddlewareStub::class );
+		$middlewares[] = static function ( ServerRequestInterface $request, RequestHandlerInterface $h ) {
+			return ( $r = $h->handle( $request ) )->withStatus( $r->getStatusCode() + 50 );
+		};
 
-		$handler = new class() implements RequestHandlerInterface {
-			public function handle( ServerRequestInterface $request ): ResponseInterface {
-				$middlewares[] = MiddlewareStub::class;
-				$middlewares[] = static function ( ServerRequestInterface $request, RequestHandlerInterface $h ) {
-					return ( $r = $h->handle( $request ) )->withStatus( $r->getStatusCode() + 50 );
-				};
-
-				$middlewares[] = new class() implements MiddlewareInterface {
-					public function process( ServerRequestInterface $request, RequestHandlerInterface $h ): ResponseInterface {
-						return ( $r = $h->handle( $request ) )->withStatus( $r->getStatusCode() + 250 );
-					}
-				};
-
-				return ( new Pipeline() )
-					->use( $request )
-					->send( subject: ( new ResponseStub() )->withStatus( code: 100 ) )
-					->through( array_map( ( new PipelineBridge() )->middlewareToPipe( ... ), $middlewares ) )
-					->thenReturn();
+		$middlewares[] = new class() implements MiddlewareInterface {
+			public function process( ServerRequestInterface $request, RequestHandlerInterface $h ): ResponseInterface {
+				return ( $r = $h->handle( $request ) )->withStatus( $r->getStatusCode() + 250 );
 			}
 		};
+
+		return $middlewares;
+	}
+
+	public function testPipelineBridgeWithPsr() {
+		/** @var ServerRequestInterface */
+		$request  = $this->createStub( ServerRequestInterface::class );
+		$response = ( new ResponseStub() )->withStatus( 100 );
+		$pipes    = array_map( PipelineBridge::middlewareToPipe( ... ), $this->getRequestHandlerMiddlewares() );
+		$handler  = new RequestHandlerStub( ( new Pipeline() )->use( $request )->send( $response )->through( $pipes ) );
+
+		$this->assertSame( expected: 500, actual: $handler->handle( $request )->getStatusCode() );
+
+		$handler = new RequestHandlerStub( Pipeline::withRequest( $request )->process( $response )->through( $pipes ) );
 
 		$this->assertSame( expected: 500, actual: $handler->handle( $request )->getStatusCode() );
 	}
