@@ -7,9 +7,13 @@ use Closure;
 use Throwable;
 use Psr\Container\ContainerInterface;
 use TheWebSolver\Codegarage\Lib\Error\InvalidPipe;
+use TheWebSolver\Codegarage\Lib\Error\InvalidPipeline;
 use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
 
 class Pipe implements PipeInterface {
+	/** @use Resolver<PipeInterface> */
+	use Resolver;
+
 	/** @param Closure(mixed $subject, Closure $next, mixed ...$args): mixed $handler */
 	// phpcs:ignore Squiz.Commenting.FunctionComment.IncorrectTypeHint
 	public function __construct( private readonly Closure $handler ) {}
@@ -18,18 +22,17 @@ class Pipe implements PipeInterface {
 		return ( $this->handler )( $subject, $next, ...$args );
 	}
 
+	/**
+	 * @throws InvalidPipe     When resolving pipe fails.
+	 * @throws InvalidPipeline When exceptions other than `InvalidPipe` is thrown.
+	 */
+	// phpcs:ignore Squiz.Commenting.FunctionCommentThrowTag.WrongNumber -- Actual number is vague.
 	public static function create(
 		string|Closure|PipeInterface $handler,
 		?ContainerInterface $container = null
 	): PipeInterface {
 		try {
-			$pipe = ! is_string( $handler ) ? $handler : ( $container?->get( $handler ) ?? new $handler() );
-
-			return match ( true ) {
-				$pipe instanceof PipeInterface => $pipe,
-				$pipe instanceof Closure       => new self( $pipe ),
-				default                        => throw InvalidPipe::from( $handler ),
-			};
+			return self::resolve( $handler, $container, array( PipeInterface::class, InvalidPipe::class ) );
 		} catch ( Throwable $thrown ) {
 			throw Pipeline::normalizeException( $thrown );
 		}

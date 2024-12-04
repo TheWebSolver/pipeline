@@ -4,55 +4,39 @@ declare( strict_types = 1 );
 namespace TheWebSolver\Codegarage\Lib;
 
 use Closure;
-use Throwable;
 use LogicException;
 use Psr\Container\ContainerInterface;
 use TheWebSolver\Codegarage\Lib\Pipe;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 use TheWebSolver\Codegarage\Lib\Psr\Middleware;
+use Psr\Http\Message\ResponseInterface as Response;
 use TheWebSolver\Codegarage\Lib\Psr\RequestHandler;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\RequestHandlerInterface as Handler;
 use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
-use TheWebSolver\Codegarage\Lib\Error\InvalidMiddlewareForPipe;
 
 class PipelineBridge {
 	public function __construct( private readonly ?ContainerInterface $container = null ) {}
 
-	/** @throws InvalidMiddlewareForPipe When middleware creation fails due to invalid classname. */
-	public function toMiddleware( string|Closure|MiddlewareInterface $handler ): MiddlewareInterface {
-		try {
-			$middleware = ! is_string( $handler ) ? $handler : ( $this->container?->get( $handler ) ?? new $handler() );
-
-			return match ( true ) {
-				$middleware instanceof MiddlewareInterface => $middleware,
-				$middleware instanceof Closure             => new Middleware( $middleware ),
-				default                                    => throw InvalidMiddlewareForPipe::from( $middleware )
-			};
-		} catch ( Throwable $e ) {
-			throw new InvalidMiddlewareForPipe( $e->getMessage(), $e->getCode(), $e );
-		}
-	}
-
 	/**
 	 * Converts to pipe irrespective of middleware being invalid.
 	 *
-	 * Exception is only thrown when converted pipe is invoked and when subject is transformed.
+	 * Exception is only thrown when pipeline has started transforming the subject (Response).
 	 */
-	public function middlewareToPipe( string|Closure|MiddlewareInterface $middleware ): PipeInterface {
+	public function middlewareToPipe( string|Closure|MiddlewareInterface $handler ): PipeInterface {
 		return Pipe::create(
-			fn ( ResponseInterface $response, Closure $next, ServerRequestInterface $request, mixed ...$args ) => $next(
-				$this->toMiddleware( $middleware )->process( $request, $this->withHandler( $response, reset( $args ) ) )
+			fn ( Response $subject, Closure $next, Request $request, mixed ...$args ) => $next(
+				Middleware::create( $handler, $this->container )
+					->process( $request, $this->withHandler( $subject, reset( $args ) ) )
 			)
 		);
 	}
 
-	private function withHandler( ResponseInterface $response, mixed $arg ): RequestHandlerInterface {
+	private function withHandler( Response $response, mixed $arg ): Handler {
 		$handler = is_string( $arg ) ? new $arg( $response ) : new RequestHandler( $response );
 
-		return $handler instanceof RequestHandlerInterface
+		return $handler instanceof Handler
 			? $handler
-			: throw new LogicException( 'Invalid Request Handler provided for pipeline usage: ' . $arg );
+			: throw new LogicException( 'Invalid Request Handler provided for pipeline: ' . $arg );
 	}
 }

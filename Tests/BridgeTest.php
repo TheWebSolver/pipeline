@@ -55,10 +55,7 @@ class BridgeTest extends TestCase {
 			->with( $handler )
 			->willReturnCallback( $this->mockFromContainerInterfaceGetMethod( ... ) );
 
-		$this->assertInstanceOf(
-			$expectedMiddlewareClassName,
-			( new PipelineBridge( $container ) )->toMiddleware( $handler )
-		);
+		$this->assertInstanceOf( $expectedMiddlewareClassName, Middleware::create( $handler, $container ) );
 	}
 
 	public function provideContainerEntryAndReturnValueForMiddleware(): array {
@@ -89,9 +86,7 @@ class BridgeTest extends TestCase {
 			$this->expectException( $thrown );
 		}
 
-		$instance = ( new PipelineBridge() )->toMiddleware( $middleware );
-
-		$this->assertInstanceOf( MiddlewareInterface::class, $instance );
+		$this->assertInstanceOf( MiddlewareInterface::class, Middleware::create( $middleware ) );
 	}
 
 	/** @dataProvider provideMiddlewares */
