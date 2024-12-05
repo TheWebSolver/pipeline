@@ -10,9 +10,7 @@ use TheWebSolver\Codegarage\Lib\Pipe;
 use Psr\Http\Server\MiddlewareInterface;
 use TheWebSolver\Codegarage\Lib\Psr\Middleware;
 use Psr\Http\Message\ResponseInterface as Response;
-use TheWebSolver\Codegarage\Lib\Psr\RequestHandler;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Server\RequestHandlerInterface as Handler;
 use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
 
 class PipelineBridge {
@@ -82,19 +80,6 @@ class PipelineBridge {
 		string|Closure|MiddlewareInterface $handler,
 		?ContainerInterface $container = null
 	): PipeInterface {
-		return Pipe::create(
-			static fn ( Response $subject, Closure $next, Request $request, mixed ...$args ) => $next(
-				Middleware::create( $handler, $container )
-					->process( $request, self::withHandler( $subject, reset( $args ) ) )
-			)
-		);
-	}
-
-	private static function withHandler( Response $response, mixed $arg ): Handler {
-		$handler = is_string( $arg ) ? new $arg( $response ) : new RequestHandler( $response );
-
-		return $handler instanceof Handler
-			? $handler
-			: throw new LogicException( 'Invalid Request Handler provided for pipeline: ' . $arg );
+		return Middleware::toPipe( $handler, $container );
 	}
 }

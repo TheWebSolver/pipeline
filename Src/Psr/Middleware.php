@@ -5,12 +5,15 @@ namespace TheWebSolver\Codegarage\Lib\Psr;
 
 use Closure;
 use Throwable;
+use LogicException;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface;
+use TheWebSolver\Codegarage\Lib\Pipe;
 use Psr\Http\Server\MiddlewareInterface;
 use TheWebSolver\Codegarage\Lib\Resolver;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\RequestHandlerInterface as Handler;
+use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
 use TheWebSolver\Codegarage\Lib\Error\InvalidMiddlewareForPipe;
 
 class Middleware implements MiddlewareInterface {
@@ -19,11 +22,11 @@ class Middleware implements MiddlewareInterface {
 
 	private const RESOLVER_TYPES = array( MiddlewareInterface::class, InvalidMiddlewareForPipe::class );
 
-	/** @param Closure(ServerRequestInterface, RequestHandlerInterface): ResponseInterface $middleware */
+	/** @param Closure(Request, Handler): Response $middleware */
 	// phpcs:ignore Squiz.Commenting.FunctionComment.IncorrectTypeHint
 	public function __construct( private readonly Closure $middleware ) {}
 
-	public function process( ServerRequestInterface $request, RequestHandlerInterface $handler ): ResponseInterface {
+	public function process( Request $request, Handler $handler ): Response {
 		return ( $this->middleware )( $request, $handler );
 	}
 
@@ -37,5 +40,25 @@ class Middleware implements MiddlewareInterface {
 		} catch ( Throwable $e ) {
 			throw new InvalidMiddlewareForPipe( $e->getMessage(), $e->getCode(), $e );
 		}
+	}
+
+	public static function toPipe(
+		string|Closure|MiddlewareInterface $handler,
+		?ContainerInterface $container = null
+	): PipeInterface {
+		return Pipe::create(
+			static fn ( Response $subject, Closure $next, Request $request, mixed ...$args ) => $next(
+				self::create( $handler, $container )
+					->process( $request, self::withHandler( $subject, reset( $args ) ) )
+			)
+		);
+	}
+
+	private static function withHandler( Response $response, mixed $arg ): Handler {
+		$handler = is_string( $arg ) ? new $arg( $response ) : new RequestHandler( $response );
+
+		return $handler instanceof Handler
+			? $handler
+			: throw new LogicException( 'Invalid Request Handler provided for pipeline: ' . $arg );
 	}
 }
