@@ -1,13 +1,13 @@
 <?php // phpcs:disable Squiz.Commenting.FunctionComment.ParamNameNoMatch, Squiz.Commenting.FunctionComment.IncorrectTypeHint
 declare(strict_types = 1);
 
-namespace TheWebSolver\Codegarage\Lib\Interfaces;
+namespace TheWebSolver\Codegarage\Pipeline\Interfaces;
 
 use Closure;
 use Throwable;
-use TheWebSolver\Codegarage\Lib\Error\InvalidPipe;
-use TheWebSolver\Codegarage\Lib\Error\InvalidPipeline;
-use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface as Handler;
+use TheWebSolver\Codegarage\Pipeline\Error\InvalidPipe;
+use TheWebSolver\Codegarage\Pipeline\Error\InvalidPipeline;
+use TheWebSolver\Codegarage\Pipeline\Interfaces\PipeInterface as Handler;
 
 interface ChainOfResponsibility {
 	/**

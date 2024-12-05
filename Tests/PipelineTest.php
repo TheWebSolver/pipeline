@@ -7,11 +7,11 @@ use Closure;
 use Exception;
 use RuntimeException;
 use PHPUnit\Framework\TestCase;
-use TheWebSolver\Codegarage\Lib\Pipeline;
+use TheWebSolver\Codegarage\Pipeline\Pipeline;
 use TheWebSolver\Codegarage\Test\Stub\PipeStub;
-use TheWebSolver\Codegarage\Lib\Error\InvalidPipe;
-use TheWebSolver\Codegarage\Lib\Error\InvalidPipeline;
-use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
+use TheWebSolver\Codegarage\Pipeline\Error\InvalidPipe;
+use TheWebSolver\Codegarage\Pipeline\Error\InvalidPipeline;
+use TheWebSolver\Codegarage\Pipeline\Interfaces\PipeInterface;
 
 class PipelineTest extends TestCase {
 	/** @return mixed[] */

@@ -7,13 +7,13 @@ use Closure;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
-use TheWebSolver\Codegarage\Lib\Pipe;
+use TheWebSolver\Codegarage\Pipeline\Pipe;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Container\ContainerExceptionInterface;
 use TheWebSolver\Codegarage\Test\Stub\PipeStub;
-use TheWebSolver\Codegarage\Lib\Error\InvalidPipe;
-use TheWebSolver\Codegarage\Lib\Error\InvalidPipeline;
-use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
+use TheWebSolver\Codegarage\Pipeline\Error\InvalidPipe;
+use TheWebSolver\Codegarage\Pipeline\Error\InvalidPipeline;
+use TheWebSolver\Codegarage\Pipeline\Interfaces\PipeInterface;
 
 class PipeTest extends TestCase {
 	private mixed $expectedContainerInterfaceGetMethodReturnValue;

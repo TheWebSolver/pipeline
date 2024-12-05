@@ -1,20 +1,20 @@
 <?php
 declare( strict_types = 1 );
 
-namespace TheWebSolver\Codegarage\Lib\Psr;
+namespace TheWebSolver\Codegarage\Pipeline\Psr;
 
 use Closure;
 use Throwable;
 use LogicException;
 use Psr\Container\ContainerInterface;
-use TheWebSolver\Codegarage\Lib\Pipe;
+use TheWebSolver\Codegarage\Pipeline\Pipe;
 use Psr\Http\Server\MiddlewareInterface;
-use TheWebSolver\Codegarage\Lib\Resolver;
+use TheWebSolver\Codegarage\Pipeline\Resolver;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as Handler;
-use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
-use TheWebSolver\Codegarage\Lib\Error\InvalidMiddlewareForPipe;
+use TheWebSolver\Codegarage\Pipeline\Interfaces\PipeInterface;
+use TheWebSolver\Codegarage\Pipeline\Error\InvalidMiddlewareForPipe;
 
 class Middleware implements MiddlewareInterface {
 	/** @use Resolver<MiddlewareInterface> */

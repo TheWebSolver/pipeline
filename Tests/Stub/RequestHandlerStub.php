@@ -4,11 +4,11 @@ declare( strict_types = 1 );
 namespace TheWebSolver\Codegarage\Test\Stub;
 
 use Psr\Http\Message\ResponseInterface;
-use TheWebSolver\Codegarage\Lib\Pipeline;
+use TheWebSolver\Codegarage\Pipeline\Pipeline;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TheWebSolver\Codegarage\Pipeline\Server\Bridge;
-use TheWebSolver\Codegarage\Lib\Interfaces\ChainOfResponsibility;
+use TheWebSolver\Codegarage\Pipeline\Bridge;
+use TheWebSolver\Codegarage\Pipeline\Interfaces\ChainOfResponsibility;
 
 class RequestHandlerStub implements RequestHandlerInterface {
 	public function __construct( private readonly ChainOfResponsibility|Bridge $handler ) {}

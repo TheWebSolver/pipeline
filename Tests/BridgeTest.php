@@ -10,17 +10,17 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
-use TheWebSolver\Codegarage\Lib\Pipeline;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use TheWebSolver\Codegarage\Pipeline\Bridge;
 use Psr\Container\ContainerExceptionInterface;
-use TheWebSolver\Codegarage\Lib\Psr\Middleware;
-use TheWebSolver\Codegarage\Pipeline\Server\Bridge;
+use TheWebSolver\Codegarage\Pipeline\Pipeline;
 use TheWebSolver\Codegarage\Test\Stub\ResponseStub;
+use TheWebSolver\Codegarage\Pipeline\Psr\Middleware;
 use TheWebSolver\Codegarage\Test\Stub\MiddlewareStub;
-use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
 use TheWebSolver\Codegarage\Test\Stub\RequestHandlerStub;
-use TheWebSolver\Codegarage\Lib\Error\InvalidMiddlewareForPipe;
+use TheWebSolver\Codegarage\Pipeline\Interfaces\PipeInterface;
+use TheWebSolver\Codegarage\Pipeline\Error\InvalidMiddlewareForPipe;
 
 class BridgeTest extends TestCase {
 	private mixed $expectedContainerInterfaceGetMethodReturnValue;

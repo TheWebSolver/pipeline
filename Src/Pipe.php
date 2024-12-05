@@ -1,14 +1,14 @@
 <?php
 declare( strict_types = 1 );
 
-namespace TheWebSolver\Codegarage\Lib;
+namespace TheWebSolver\Codegarage\Pipeline;
 
 use Closure;
 use Throwable;
 use Psr\Container\ContainerInterface;
-use TheWebSolver\Codegarage\Lib\Error\InvalidPipe;
-use TheWebSolver\Codegarage\Lib\Error\InvalidPipeline;
-use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
+use TheWebSolver\Codegarage\Pipeline\Error\InvalidPipe;
+use TheWebSolver\Codegarage\Pipeline\Error\InvalidPipeline;
+use TheWebSolver\Codegarage\Pipeline\Interfaces\PipeInterface;
 
 class Pipe implements PipeInterface {
 	/** @use Resolver<PipeInterface> */

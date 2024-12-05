@@ -1,23 +1,23 @@
 <?php // phpcs:disable Squiz.Commenting.FunctionComment.ParamNameNoMatch
 declare( strict_types = 1 );
 
-namespace TheWebSolver\Codegarage\Pipeline\Server;
+namespace TheWebSolver\Codegarage\Pipeline;
 
 use Closure;
 use LogicException;
 use Psr\Container\ContainerInterface;
-use TheWebSolver\Codegarage\Lib\Pipe;
+use TheWebSolver\Codegarage\Pipeline\Pipe;
 use Psr\Http\Server\MiddlewareInterface;
-use TheWebSolver\Codegarage\Lib\Pipeline;
-use TheWebSolver\Codegarage\Lib\Psr\Middleware;
-use TheWebSolver\Codegarage\Lib\Error\InvalidPipe;
+use TheWebSolver\Codegarage\Pipeline\Pipeline;
+use TheWebSolver\Codegarage\Pipeline\Psr\Middleware;
+use TheWebSolver\Codegarage\Pipeline\Error\InvalidPipe;
 use Psr\Http\Message\ResponseInterface as Response;
-use TheWebSolver\Codegarage\Lib\Psr\RequestHandler;
-use TheWebSolver\Codegarage\Lib\Error\InvalidPipeline;
+use TheWebSolver\Codegarage\Pipeline\Psr\RequestHandler;
+use TheWebSolver\Codegarage\Pipeline\Error\InvalidPipeline;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as Handler;
-use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
-use TheWebSolver\Codegarage\Lib\Interfaces\ChainOfResponsibility;
+use TheWebSolver\Codegarage\Pipeline\Interfaces\PipeInterface;
+use TheWebSolver\Codegarage\Pipeline\Interfaces\ChainOfResponsibility;
 
 class Bridge {
 	/** @var PipeInterface[] */

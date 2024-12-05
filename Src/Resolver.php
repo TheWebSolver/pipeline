@@ -5,7 +5,7 @@
 
 declare( strict_types = 1 );
 
-namespace TheWebSolver\Codegarage\Lib;
+namespace TheWebSolver\Codegarage\Pipeline;
 
 use Closure;
 use Psr\Container\ContainerInterface;

@@ -1,7 +1,7 @@
 <?php
 declare( strict_types = 1 );
 
-namespace TheWebSolver\Codegarage\Lib\Interfaces;
+namespace TheWebSolver\Codegarage\Pipeline\Interfaces;
 
 use Closure;
 

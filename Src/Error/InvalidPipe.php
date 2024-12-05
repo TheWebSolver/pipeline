@@ -1,7 +1,7 @@
 <?php
 declare( strict_types = 1 );
 
-namespace TheWebSolver\Codegarage\Lib\Error;
+namespace TheWebSolver\Codegarage\Pipeline\Error;
 
 use TypeError;
 
