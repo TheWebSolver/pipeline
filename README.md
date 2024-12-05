@@ -22,7 +22,7 @@ $ composer require thewebsolver/pipeline
 
 	> Use _`Pipeline::sealWith()`_ method to pass a closure to handle thrown exception.
 
-- Provides [bridge][b] for PHP Projects that implements [PSR-7][7], [PSR-15][15] (optional [PSR-11][11]) standards.
+- Provides [bridge][b] for PHP Projects that implements [PSR-7][7] & [PSR-15][15] standards.
 
 	> Use [Queue based Request Handler][q] implementation to handle stacked middlewares inside [Request Handler][h]'s handle method (_`RequestHandlerInterface::handle()`_).
 
@@ -33,7 +33,7 @@ For usage details, visit [Wiki page][w].
 [h]: https://www.php-fig.org/psr/psr-15/#21-psrhttpserverrequesthandlerinterface
 [q]: https://www.php-fig.org/psr/psr-15/meta/#queue-based-request-handler
 [w]: https://github.com/TheWebSolver/pipeline/wiki
-[b]: Src/PipelineBridge.php
+[b]: Server/Bridge.php
 [7]: https://www.php-fig.org/psr/psr-7/
 [15]: https://www.php-fig.org/psr/psr-15/
 [11]: https://www.php-fig.org/psr/psr-11/

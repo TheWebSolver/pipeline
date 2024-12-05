@@ -21,10 +21,6 @@ final class Pipeline implements ChainOfResponsibility {
 
 	public function __construct( private readonly ?ContainerInterface $container = null ) {}
 
-	public static function withRequest( \Psr\Http\Message\ServerRequestInterface $request ): PipelineBridge {
-		return ( new PipelineBridge() )->withRequest( $request );
-	}
-
 	public static function normalizeException( Throwable $thrown, mixed $subject = null ): InvalidPipe|InvalidPipeline {
 		return $thrown instanceof InvalidPipe ? $thrown : new InvalidPipeline( $thrown, $subject );
 	}

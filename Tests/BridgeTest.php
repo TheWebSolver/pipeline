@@ -14,8 +14,8 @@ use TheWebSolver\Codegarage\Lib\Pipeline;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Container\ContainerExceptionInterface;
-use TheWebSolver\Codegarage\Lib\PipelineBridge;
 use TheWebSolver\Codegarage\Lib\Psr\Middleware;
+use TheWebSolver\Codegarage\Pipeline\Server\Bridge;
 use TheWebSolver\Codegarage\Test\Stub\ResponseStub;
 use TheWebSolver\Codegarage\Test\Stub\MiddlewareStub;
 use TheWebSolver\Codegarage\Lib\Interfaces\PipeInterface;
@@ -92,7 +92,7 @@ class BridgeTest extends TestCase {
 
 	/** @dataProvider provideMiddlewares */
 	public function testMiddlewareToPipeConversion( mixed $middleware, ?string $thrown = null ): void {
-		$this->assertInstanceOf( PipeInterface::class, PipelineBridge::middlewareToPipe( $middleware ) );
+		$this->assertInstanceOf( PipeInterface::class, Middleware::toPipe( $middleware ) );
 	}
 
 	/** @return array<mixed[]>*/
@@ -136,12 +136,12 @@ class BridgeTest extends TestCase {
 		/** @var ServerRequestInterface */
 		$request  = $this->createStub( ServerRequestInterface::class );
 		$response = ( new ResponseStub() )->withStatus( 100 );
-		$pipes    = array_map( PipelineBridge::middlewareToPipe( ... ), $this->getRequestHandlerMiddlewares() );
+		$pipes    = array_map( Middleware::toPipe( ... ), $this->getRequestHandlerMiddlewares() );
 		$handler  = new RequestHandlerStub( ( new Pipeline() )->use( $request )->send( $response )->through( $pipes ) );
 
 		$this->assertSame( expected: 500, actual: $handler->handle( $request )->getStatusCode() );
 
-		$handler = new RequestHandlerStub( Pipeline::withRequest( $request )->process( $response )->through( $pipes ) );
+		$handler = new RequestHandlerStub( ( new Bridge() )->for( $request, $response )->through( ...$pipes ) );
 
 		$this->assertSame( expected: 500, actual: $handler->handle( $request )->getStatusCode() );
 	}
@@ -154,8 +154,11 @@ class BridgeTest extends TestCase {
 
 		$this->expectException( LogicException::class );
 
-		( new PipelineBridge() )
-			->middlewareToPipe( new MiddlewareStub() )
-			->handle( $response, $this->fail( ... ), $this->createStub( ServerRequestInterface::class ), $handler::class );
+		Middleware::toPipe( new MiddlewareStub() )->handle(
+			$response,
+			$this->fail( ... ),
+			$this->createStub( ServerRequestInterface::class ),
+			$handler::class
+		);
 	}
 }

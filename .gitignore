@@ -9,4 +9,5 @@
 !phpcs.xml.dist
 !phpstan.dist.neon
 !/Src
+!/Server
 !/Tests/
