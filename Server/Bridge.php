@@ -7,7 +7,6 @@ use Closure;
 use LogicException;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Server\MiddlewareInterface;
-use TheWebSolver\Codegarage\Pipeline\Pipe;
 use TheWebSolver\Codegarage\Pipeline\Pipeline;
 use TheWebSolver\Codegarage\Pipeline\Middleware;
 use Psr\Http\Message\ResponseInterface as Response;

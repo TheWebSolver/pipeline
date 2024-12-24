@@ -117,7 +117,7 @@ class BridgeTest extends TestCase {
 		);
 	}
 
-	private function getRequestHandlerMiddlewares(): array {
+	private function getMiddlewares(): array {
 		$middlewares   = array( MiddlewareStub::class );
 		$middlewares[] = static function ( ServerRequestInterface $request, RequestHandlerInterface $h ) {
 			return ( $r = $h->handle( $request ) )->withStatus( $r->getStatusCode() + 50 );
@@ -132,16 +132,22 @@ class BridgeTest extends TestCase {
 		return $middlewares;
 	}
 
-	public function testPipelineBridgeWithPsr() {
+	public function testPipelineBridgeWithPsr(): void {
 		/** @var ServerRequestInterface */
 		$request  = $this->createStub( ServerRequestInterface::class );
 		$response = ( new ResponseStub() )->withStatus( 100 );
-		$pipes    = array_map( Middleware::toPipe( ... ), $this->getRequestHandlerMiddlewares() );
+		$pipes    = array_map( Middleware::toPipe( ... ), $this->getMiddlewares() );
 		$handler  = new RequestHandlerStub( ( new Pipeline() )->use( $request )->send( $response )->through( $pipes ) );
 
 		$this->assertSame( expected: 500, actual: $handler->handle( $request )->getStatusCode() );
 
 		$handler = new RequestHandlerStub( ( new Bridge() )->for( $request, $response )->through( ...$pipes ) );
+
+		$this->assertSame( expected: 500, actual: $handler->handle( $request )->getStatusCode() );
+
+		$handler = new RequestHandlerStub(
+			( new Bridge() )->for( $request, $response )->throughMiddlewares( ...$this->getMiddlewares() )
+		);
 
 		$this->assertSame( expected: 500, actual: $handler->handle( $request )->getStatusCode() );
 	}
