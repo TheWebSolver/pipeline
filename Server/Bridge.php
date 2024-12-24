@@ -40,14 +40,8 @@ class Bridge {
 		return $this;
 	}
 
-	/**
-	 * @param string|PipeInterface|(Closure(Response, Closure $next, Request, ?string $requestHandlerClassName): Response) $pipe
-	 * @param string|PipeInterface|(Closure(Response, Closure $next, Request, ?string $requestHandlerClassName): Response) ...$pipes
-	 */
-	public function through( string|Closure|PipeInterface $pipe, string|Closure|PipeInterface ...$pipes ): self {
-		foreach ( array( $pipe, ...$pipes ) as $handler ) {
-			$this->pipes[] = Pipe::create( $handler, $this->container );
-		}
+	public function through( PipeInterface $pipe, PipeInterface ...$pipes ): self {
+		$this->pipes = array( $pipe, ...$pipes );
 
 		return $this;
 	}
