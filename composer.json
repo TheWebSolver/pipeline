@@ -22,7 +22,7 @@
     "psr-4": {
       "TheWebSolver\\Codegarage\\Pipeline\\": [
         "Src/",
-        "Server"
+        "Server/"
       ]
     }
   },
